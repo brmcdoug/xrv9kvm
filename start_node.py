@@ -54,6 +54,10 @@ if (sys.argv[1]) in ['r03']:
     subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr03xr1', 'tag=110'])
     subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr03xr2', 'tag=112'])
     subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr03xr3', 'tag=363'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr03xr4', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr03xr5', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr03xr6', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr03xr7', 'tag=999'])
 
 # R04 
 if (sys.argv[1]) in ['r04']:
@@ -62,8 +66,10 @@ if (sys.argv[1]) in ['r04']:
     subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr04xr0', 'tag=112'])
     subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr04xr1', 'tag=113'])
     subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr04xr2', 'tag=74'])
-    subprocess.call(['ovs-vsctl', 'add-port', 'scapy', 'rtr04xr7'])
-    
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr04xr4', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr04xr5', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr04xr6', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr04xr7', 'tag=999'])    
 
 # R05
 if (sys.argv[1]) in ['r05']:
@@ -74,8 +80,9 @@ if (sys.argv[1]) in ['r05']:
     subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr05xr2', 'tag=364'])
     subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr05xr3', 'tag=365'])
     subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr05xr4', 'tag=516'])
-    subprocess.call(['ovs-vsctl', 'add-port', 'scapy', 'rtr05xr7'])
-
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr05xr5', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr05xr6', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr05xr7', 'tag=999'])
 
 # R06
 if (sys.argv[1]) in ['r06']:
@@ -85,9 +92,11 @@ if (sys.argv[1]) in ['r06']:
     subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr06xr1', 'tag=106'])
     subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr06xr2', 'tag=116'])
     subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr06xr3', 'tag=117'])
-    subprocess.call(['ovs-vsctl', 'add-port', 'scapy', 'rtr06xr7'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr06xr4', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr06xr5', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr06xr6', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr06xr7', 'tag=999'])
     
-
 # R07
 if (sys.argv[1]) in ['r07']:
     subprocess.call(['python', 'util/qemu-xrv9k.py', 'r07.img', '07', 'r07'])
@@ -99,10 +108,9 @@ if (sys.argv[1]) in ['r07']:
     subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr07xr4', 'tag=366'])
     subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr07xr5', 'tag=367'])
     subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr07xr6', 'tag=130'])
-    subprocess.call(['ovs-vsctl', 'add-port', 'scapy', 'rtr07xr7'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr07xr7', 'tag=999'])    
     subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr07xr8', 'tag=74'])
     subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr07xr9', 'tag=999'])    
-
 
 # R08
 if (sys.argv[1]) in ['r08']:
@@ -111,8 +119,11 @@ if (sys.argv[1]) in ['r08']:
     subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr08xr0', 'tag=109'])
     subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr08xr1', 'tag=108'])
     subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr08xr2', 'tag=115'])
-    subprocess.call(['ovs-vsctl', 'add-port', 'scapy', 'rtr08xr7'])
-
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr08xr3', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr08xr4', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr08xr5', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr08xr6', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr08xr7', 'tag=999'])
 
 # R09
 if (sys.argv[1]) in ['r09']:
@@ -121,14 +132,20 @@ if (sys.argv[1]) in ['r09']:
     subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr09xr0', 'tag=115'])
     subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr09xr1', 'tag=114'])
     subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr09xr2', 'tag=369'])
-    subprocess.call(['ovs-vsctl', 'add-port', 'scapy', 'rtr09xr7'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr09xr3', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr09xr4', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr09xr5', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr09xr6', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr09xr7', 'tag=999'])
 
 # R10
 if (sys.argv[1]) in ['r10']:
     subprocess.call(['python', 'util/qemu-xrv9k.py', 'r10.img', '10', 'r10'])
     subprocess.call(['ovs-vsctl', 'add-port', 'mgt_br', 'rtr10mgt1'])
     subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr10xr0', 'tag=121'])
-    subprocess.call(['ovs-vsctl', 'add-port', 'scapy', 'rtr10xr7'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr10xr1', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr10xr2', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr10xr3', 'tag=999'])
 
 # R16
 if (sys.argv[1]) in ['r16']:
@@ -137,7 +154,11 @@ if (sys.argv[1]) in ['r16']:
     subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr16xr0', 'tag=516'])
     subprocess.call(['ovs-vsctl', 'add-port', 'gre-br2', 'rtr16xr1', 'tag=100'])
     subprocess.call(['ovs-vsctl', 'add-port', 'gre-br3', 'rtr16xr2', 'tag=102'])
-    subprocess.call(['ovs-vsctl', 'add-port', 'scapy', 'rtr16xr7'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr16xr3', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr16xr4', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr16xr5', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr16xr6', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr16xr7', 'tag=999'])
 
 ##### Routers 17 - 24 run on UCS server 2
 
@@ -147,8 +168,12 @@ if (sys.argv[1]) in ['r17']:
     subprocess.call(['ovs-vsctl', 'add-port', 'mgt_br', 'rtr17mgt1'])
     subprocess.call(['ovs-vsctl', 'add-port', 'gre-br23', 'rtr17xr0', 'tag=100'])
     subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr17xr1', 'tag=100'])
-    subprocess.call(['ovs-vsctl', 'add-port', 'scapy', 'rtr17xr7'])
-
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr17xr2', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr17xr3', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr17xr4', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr17xr5', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr17xr6', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr17xr7', 'tag=999'])
 
 # R18
 if (sys.argv[1]) in ['r18']:
@@ -157,8 +182,11 @@ if (sys.argv[1]) in ['r18']:
     subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr18xr0', 'tag=200'])
     subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr18xr1', 'tag=203'])
     subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr18xr2', 'tag=202'])
-    subprocess.call(['ovs-vsctl', 'add-port', 'scapy', 'rtr18xr7'])
-
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr18xr3', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr18xr4', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr18xr5', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr18xr6', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr18xr7', 'tag=999'])
 
 # R19
 if (sys.argv[1]) in ['r19']:
@@ -167,8 +195,11 @@ if (sys.argv[1]) in ['r19']:
     subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr19xr0', 'tag=203'])
     subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr19xr1', 'tag=204'])
     subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr19xr2', 'tag=205'])
-    subprocess.call(['ovs-vsctl', 'add-port', 'scapy', 'rtr19xr7'])
-
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr19xr3', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr19xr4', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr19xr5', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr19xr6', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr19xr7', 'tag=999'])
 
 # R20
 if (sys.argv[1]) in ['r20']:
@@ -176,8 +207,12 @@ if (sys.argv[1]) in ['r20']:
     subprocess.call(['ovs-vsctl', 'add-port', 'mgt_br', 'rtr20mgt1'])
     subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr20xr0', 'tag=204'])
     subprocess.call(['ovs-vsctl', 'add-port', 'gre-br23', 'rtr20xr1', 'tag=103'])
-    subprocess.call(['ovs-vsctl', 'add-port', 'scapy', 'rtr20xr7'])
-
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr20xr2', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr20xr3', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr20xr4', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr20xr5', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr20xr6', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr20xr7', 'tag=999'])
 
 # R21
 if (sys.argv[1]) in ['r21']:
@@ -185,8 +220,12 @@ if (sys.argv[1]) in ['r21']:
     subprocess.call(['ovs-vsctl', 'add-port', 'mgt_br', 'rtr21mgt1'])
     subprocess.call(['ovs-vsctl', 'add-port', 'gre-br23', 'rtr21xr0', 'tag=101'])
     subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr21xr1', 'tag=201'])
-    subprocess.call(['ovs-vsctl', 'add-port', 'scapy', 'rtr21xr7'])
-
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr21xr2', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr21xr3', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr21xr4', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr21xr5', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr21xr6', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr21xr7', 'tag=999'])
 
 # R22
 if (sys.argv[1]) in ['r22']:
@@ -194,8 +233,12 @@ if (sys.argv[1]) in ['r22']:
     subprocess.call(['ovs-vsctl', 'add-port', 'mgt_br', 'rtr22mgt1'])
     subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr22xr0', 'tag=201'])
     subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr22xr1', 'tag=202'])
-    subprocess.call(['ovs-vsctl', 'add-port', 'scapy', 'rtr22xr7'])
-
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr22xr2', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr22xr3', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr22xr4', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr22xr5', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr22xr6', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr22xr7', 'tag=999'])
 
 # R23
 if (sys.argv[1]) in ['r23']:
@@ -203,8 +246,12 @@ if (sys.argv[1]) in ['r23']:
     subprocess.call(['ovs-vsctl', 'add-port', 'mgt_br', 'rtr23mgt1'])
     subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr23xr0', 'tag=206'])
     subprocess.call(['ovs-vsctl', 'add-port', 'gre-br23', 'rtr23xr1', 'tag=104'])
-    subprocess.call(['ovs-vsctl', 'add-port', 'scapy', 'rtr23xr7'])
-
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr23xr2', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr23xr3', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr23xr4', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr23xr5', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr23xr6', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr23xr7', 'tag=999'])=
 
 # R24
 if (sys.argv[1]) in ['r24']:
@@ -212,8 +259,12 @@ if (sys.argv[1]) in ['r24']:
     subprocess.call(['ovs-vsctl', 'add-port', 'mgt_br', 'rtr24mgt1'])
     subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr24xr0', 'tag=206'])
     subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr24xr1', 'tag=205'])
-    subprocess.call(['ovs-vsctl', 'add-port', 'scapy', 'rtr24xr7'])
-
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr24xr2', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr24xr3', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr24xr4', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr24xr5', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr24xr6', 'tag=999'])
+    subprocess.call(['ovs-vsctl', 'add-port', 'rtr_br', 'rtr24xr7', 'tag=999'])
 
 ############################
 print "node started"
