@@ -26,11 +26,7 @@ etc.
 7. create or edit the example "start_node.py" file which maps your router VM interfaces to OVS bridge and vlan instances (see example diagram)
 ![Diagram](xrv9kvm_topology.png "diagram")
 
-https://github.com/brmcdoug/xrv9kvm/blob/main/xrv9kvm_topology.png
-
 ![Start_Node](start_node.py "start_node.py")
-
-https://github.com/brmcdoug/xrv9kvm/blob/main/start_node.py
 
 9. create OVS bridges and linux IP addrs 
 https://github.com/brmcdoug/xrv9kvm/blob/main/ovs_plumbing.sh
