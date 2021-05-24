@@ -1,11 +1,11 @@
 # xrv9kvm
 A little tool for building xrv9k virtual router topologies ON THE CHEAP
 
-1. HW Requirements: 
+1. hardware/OS requirements: 
     * ubuntu 20.04 or 18.04, minimum 16 vCPU, 96GB memory, 200GB disk
-    * The datasheet says to deploy xrv9k with 4 vCPU and 16G of memory per VM.  I've run them very stably with 2 vCPU and 14G of memory.
+    * the datasheet says to deploy xrv9k with 4 vCPU and 16G of memory per VM.  I've run them very stably with 2 vCPU and 14G of memory.
 
-2. Required packages:
+2. required packages:
     * openssh-server qemu qemu-kvm libvirt-bin
     * optional: virt-manager
 
@@ -27,6 +27,7 @@ etc.
 https://github.com/brmcdoug/xrv9kvm/blob/main/start_node.py
 
 9. create OVS bridges and linux IP addrs 
+https://github.com/brmcdoug/xrv9kvm/blob/main/ovs_plumbing.sh
 ```
 sudo ./ovs_plumbing.sh
 # shell script comes with default settings for router mgt and "production" bridges and IP addrs. please edit to suit your env
@@ -39,7 +40,7 @@ sudo ./start_node.py r02
 sudo ./start_node.py r17
 etc.
 ```
-10. Access router VM's console port and see if they're booting (fingers crossed)
+10. access router VM's console port and see if they're booting (fingers crossed)
 
 ```
 r01:
@@ -54,6 +55,6 @@ telnet 0 20170
 etc.
 ```
 
-11. They take a long time to boot
-12. More than enough time to make a fresh pot of coffee
+11. they take a long time to boot
+12. more than enough time to make a fresh pot of coffee or a sandwich
 13. 
