@@ -32,7 +32,7 @@ See example diagram
 
 9. create OVS bridges and linux IP addrs
  
-[ovs_plumbing](ovs_plumbing.sh "ovs_plumbing.sh")
+![ovs_plumbing](ovs_plumbing.sh)
 ```
 sudo ./ovs_plumbing.sh
 # shell script comes with default settings for router mgt and "production" bridges and IP addrs. please edit to suit your env
@@ -62,4 +62,4 @@ etc.
 
 11. they take a long time to boot
 12. more than enough time to make a fresh pot of coffee or a sandwich
-13. 
+13. configure routers
