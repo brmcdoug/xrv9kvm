@@ -34,12 +34,17 @@ See example diagram
  
 ![ovs_plumbing](ovs_plumbing.sh)
 ```
+sudo chmod 755 ovs_plumbing.sh 
 sudo ./ovs_plumbing.sh
+
 # shell script comes with default settings for router mgt and "production" bridges and IP addrs. please edit to suit your env
+
 ```
 9. start nodes
 
 ```
+sudo chmod 755 start_node.py
+
 sudo ./start_node.py r01
 sudo ./start_node.py r02
 sudo ./start_node.py r17
