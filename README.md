@@ -23,12 +23,14 @@ qemu-img create -b  xrv9k-fullk9-x-7.3.1.qcow2 -f qcow2 r02.img
 qemu-img create -b  xrv9k-fullk9-x-7.3.1.qcow2 -f qcow2 r17.img
 etc.
 ```
-7. create or edit the example "start_node.py" file which maps your router VM interfaces to OVS bridge and vlan instances (see example diagram)
-![Diagram](xrv9kvm_topology.png "diagram")
-
+7. create or edit the example "start_node.py" file which maps your router VM interfaces to OVS bridge and vlan instances
 [Start_Node](start_node.py "start_node.py")
 
-9. create OVS bridges and linux IP addrs 
+See example diagram
+![Diagram](xrv9kvm_topology.png "diagram")
+
+9. create OVS bridges and linux IP addrs
+ 
 [ovs_plumbing](ovs_plumbing.sh "ovs_plumbing.sh")
 ```
 sudo ./ovs_plumbing.sh
