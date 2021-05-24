@@ -24,7 +24,8 @@ qemu-img create -b  xrv9k-fullk9-x-7.3.1.qcow2 -f qcow2 r17.img
 etc.
 ```
 7. create or edit the example "start_node.py" file which maps your router VM interfaces to OVS bridge and vlan instances
-[Start_Node](start_node.py "start_node.py")
+
+[Start_Node](start_node.py "start_node.py"){:target="_blank"}
 
 See example diagram
 ![Diagram](xrv9kvm_topology.png "diagram")
