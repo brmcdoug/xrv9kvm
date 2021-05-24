@@ -1,5 +1,5 @@
 # xrv9kvm
-A little tool for building xrv9k virtual router topologies on the cheap
+A little tool for building xrv9k virtual router topologies ON THE CHEAP
 
 1. HW Requirements: 
     * ubuntu 20.04 or 18.04, minimum 16 vCPU, 96GB memory, 200GB disk
@@ -24,9 +24,10 @@ qemu-img create -b  xrv9k-fullk9-x-7.3.1.qcow2 -f qcow2 r17.img
 etc.
 ```
 7. create or edit the example "start_node.py" file which maps your router VM interfaces to OVS bridge and vlan instances (see example diagram)
-8. create OVS bridges and linux IP addrs
+8. create OVS bridges and linux IP addrs 
 ```
 sudo ./ovs_plumbing.sh
+# shell script comes with default settings for router mgt and "production" bridges and IP addrs. please edit to suit your env
 ```
 9. start nodes
 
