@@ -2,8 +2,9 @@
 A little tool for building xrv9k virtual router topologies on KVM, without the need for orchestrators like Openstack
 
 1. hardware/OS requirements: 
-    * ubuntu 20.04 or 18.04, minimum 16 vCPU, 96GB memory, 200GB disk
-    * the datasheet says to deploy xrv9k with 4 vCPU and 16G of memory per VM.  I've run them very stably with 2 vCPU and 14G of memory.
+    * ubuntu 20.04 or 18.04
+    * CPU, memory, and disk requirements will depend on number of routers.  a 5 router topology would require 10 vCPU, 70GB of memory, and 250GB disk
+      * the datasheet says to deploy xrv9k with 4 vCPU and 16G of memory per VM.  I've run them very stably with 2 vCPU and 14G of memory.
 
 2. required packages:
     * openssh-server qemu qemu-kvm libvirt-bin
