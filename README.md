@@ -7,7 +7,7 @@ A little tool for building xrv9k virtual router topologies on KVM, without the n
       * the datasheet says to deploy xrv9k with 4 vCPU and 16G of memory per VM.  I've run them very stably with 2 vCPU and 14G of memory.
 
 2. required packages:
-    * openssh-server qemu qemu-kvm libvirt-bin
+    * openssh-server qemu qemu-kvm libvirt-bin openvswitch-switch
     * optional: virt-manager
 
 3. clone this repository:
