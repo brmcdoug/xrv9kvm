@@ -1,0 +1,5163 @@
+hostname R01
+username cisco
+ group root-lr
+ group cisco-support
+ secret 10 $6$2up1d0SxEeDY8d0.$P4IQDTo6OA2eUI1OaUUDGW.WiEx5cjZ3E5cMFsDI9i0roYKZgbDVcFFRjHJyzVdQtqbAbgir3gyXhXV4LrTCf0
+!
+grpc
+ port 57400
+ address-family ipv4
+ service-layer
+ !
+!
+telemetry model-driven
+ destination-group jalapeno
+  address-family ipv4 10.200.99.7 port 32400
+   encoding self-describing-gpb
+   protocol grpc no-tls
+  !
+ !
+ sensor-group cisco_models
+  sensor-path Cisco-IOS-XR-infra-xtc-agent-oper:xtc/policies
+  sensor-path Cisco-IOS-XR-infra-xtc-agent-oper:xtc/policy-forwardings
+  sensor-path Cisco-IOS-XR-clns-isis-oper:isis/instances/instance/statistics-global/per-area-data
+  sensor-path openconfig-network-instance:network-instances/network-instance/protocols/protocol/isis/levels/level/system-level-counters
+  sensor-path Cisco-IOS-XR-ip-rib-ipv4-oper:rib/vrfs/vrf/afs/af/safs/saf[saf-name='Unicast']/ip-rib-route-table-names/ip-rib-route-table-name/protocol/isis/as/information
+ !
+ sensor-group openconfig_interfaces
+ !
+ subscription base_metrics
+  sensor-group-id cisco_models sample-interval 10000
+  sensor-group-id openconfig_interfaces sample-interval 10000
+  destination-id jalapeno
+  source-interface MgmtEth0/RP0/CPU0/0
+ !        
+!
+tpa
+ vrf default
+  address-family ipv4
+   default-route mgmt
+   update-source dataports MgmtEth0/RP0/CPU0/0
+  !
+ !
+!
+call-home
+ service active
+ contact smart-licensing
+ profile CiscoTAC-1
+  active
+  destination transport-method http
+ !
+!
+netconf-yang agent
+ ssh
+!
+ipv6 access-list LOCATORS
+ 10 permit ipv6 any 2001:1:1:f001::/64
+ 20 permit ipv6 any 2001:1:1:f002::/64
+ 30 permit ipv6 any 2001:1:1:f003::/64
+ 40 permit ipv6 any 2001:1:1:f004::/64
+ 50 permit ipv6 any 2001:1:1:f005::/64
+ 60 permit ipv6 any 2001:1:1:f006::/64
+!
+interface Loopback0
+ ipv4 address 10.0.0.1 255.255.255.255
+ ipv6 address 2001:1:1:f001::1/128
+!
+interface MgmtEth0/RP0/CPU0/0
+ description mgt  
+ ipv4 address 10.251.253.101 255.255.255.0
+!         
+interface GigabitEthernet0/0/0/0
+ description to r00 
+ ipv4 address 10.1.1.1 255.255.255.254
+ ipv6 address 2001:1:1:1::1/127
+!
+interface GigabitEthernet0/0/0/1
+ description to r06 - no longer in use
+ ipv4 address 10.1.1.4 255.255.255.254
+ ipv6 address 2001:1:1:1::4/127
+ shutdown
+ ipv6 access-group LOCATORS egress
+!
+interface GigabitEthernet0/0/0/2
+ description to r07 - no longer in use
+ ipv4 address 10.1.1.6 255.255.255.254
+ ipv6 address 2001:1:1:1::6/127
+ shutdown
+!
+interface GigabitEthernet0/0/0/3
+ description to r08  
+ ipv4 address 10.1.1.12 255.255.255.254
+ ipv6 address 2001:1:1:1::12/127
+!
+interface GigabitEthernet0/0/0/4
+ description 1000Eyes
+ ipv4 address 10.0.253.101 255.255.255.0
+!
+interface GigabitEthernet0/0/0/5
+ description to r10
+ ipv4 address 10.1.1.28 255.255.255.254
+ ipv6 address 2001:1:1:1::28/127
+!
+interface GigabitEthernet0/0/0/6
+ description to vMX
+ ipv4 address 10.1.1.30 255.255.255.254
+!         
+interface GigabitEthernet0/0/0/7
+ description to r02
+ ipv4 address 10.1.1.40 255.255.255.254
+ ipv6 address 2001:1:1:1::40/127
+!
+interface GigabitEthernet0/0/0/8
+ description to DC R32
+ ipv4 address 10.0.32.0 255.255.255.254
+ ipv6 address 2001:420:ffff::/127
+!
+interface GigabitEthernet0/0/0/9
+ description to DC R33
+ ipv4 address 10.0.33.0 255.255.255.254
+ ipv6 address 2001:420:ffff::4/127
+!
+route-policy SID($SID)
+  set label-index $SID
+end-policy
+!
+route-policy drop
+  drop
+end-policy
+!
+route-policy pass
+  pass
+end-policy
+!
+route-policy gojira
+  if destination in (172.16.190.0/24) then
+    pass
+  else
+    drop
+  endif
+end-policy
+!
+route-policy vrf-srte
+  if destination in (200.200.15.0/24) then
+    set label 80215
+  endif
+  if destination in (100.100.15.0/24) then
+    set label 80115
+  endif
+  pass
+end-policy
+!
+router static
+ address-family ipv4 unicast
+  10.0.32.1/32 GigabitEthernet0/0/0/8
+  10.0.33.1/32 GigabitEthernet0/0/0/9
+  10.1.1.0/32 GigabitEthernet0/0/0/0
+  10.200.99.0/24 MgmtEth0/RP0/CPU0/0 10.251.253.1
+  10.200.99.3/32 GigabitEthernet0/0/0/4 10.0.253.1
+  172.16.190.0/24 GigabitEthernet0/0/0/4 10.0.253.1
+ !
+!
+router isis 100
+ is-type level-2-only
+ net 49.0901.0000.0000.0001.00
+ distribute link-state level 2
+ nsf ietf
+ flex-algo 128
+  priority 128
+  metric-type delay
+  advertise-definition
+ !
+ address-family ipv4 unicast
+  metric-style wide
+  advertise link attributes
+  mpls traffic-eng level-2-only
+  mpls traffic-eng router-id Loopback0
+  maximum-paths 32
+  segment-routing mpls
+ !
+ address-family ipv6 unicast
+  metric-style wide
+  advertise link attributes
+  maximum-paths 32
+  segment-routing srv6
+   locator MAIN
+   !
+  !
+ !
+ interface Loopback0
+  passive
+  address-family ipv4 unicast
+   prefix-sid index 1
+   prefix-sid algorithm 128 absolute 110001
+   prefix-sid algorithm 129 index 20001
+  !
+  address-family ipv6 unicast
+  !
+ !
+ interface GigabitEthernet0/0/0/0
+  circuit-type level-2-only
+  point-to-point
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+ !        
+ interface GigabitEthernet0/0/0/3
+  circuit-type level-2-only
+  point-to-point
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+ !
+ interface GigabitEthernet0/0/0/5
+  circuit-type level-2-only
+  point-to-point
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+ !
+ interface GigabitEthernet0/0/0/7
+  circuit-type level-2-only
+  point-to-point
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+ !
+!
+router bgp 100000
+ bgp router-id 10.0.0.1
+ segment-routing srv6
+  locator BGP
+ !
+ bgp bestpath as-path multipath-relax
+ address-family ipv4 unicast
+  additional-paths receive
+  maximum-paths ebgp 32
+  segment-routing srv6
+   locator BGP
+  !
+  network 10.0.0.1/32 route-policy SID(1)
+  network 10.0.253.0/24 route-policy SID(253)
+  redistribute static route-policy gojira
+  allocate-label all
+ !
+ address-family vpnv4 unicast
+  retain route-target all
+ !
+ address-family ipv6 unicast
+  additional-paths receive
+  maximum-paths ebgp 32
+  segment-routing srv6
+   locator BGP
+  !
+  network 2001:1:1:f001::1/128
+ !
+ address-family vpnv6 unicast
+ !
+ address-family link-state link-state
+ !
+ address-family ipv4 sr-policy
+ !
+ neighbor 10.1.1.0
+  remote-as 65000
+  egress-engineering
+  description IBX ASBR Inter-AS option-B peer
+  bmp-activate server 1
+  bmp-activate server 2
+  address-family ipv4 unicast
+   route-policy pass in
+   route-policy pass out
+  !
+  address-family ipv4 labeled-unicast
+   route-policy pass in
+   route-policy pass out
+  !
+  address-family vpnv4 unicast
+   route-policy pass in
+   route-policy pass out
+  !
+  address-family ipv6 unicast
+   route-policy pass in
+   route-policy pass out
+  !
+  address-family vpnv6 unicast
+   route-policy pass in
+   route-policy pass out
+  !
+ !
+ neighbor 10.0.0.10
+  remote-as 100000
+  description iBGP to r10 
+  update-source Loopback0
+  address-family ipv4 unicast
+   next-hop-self
+  !
+  address-family ipv4 labeled-unicast
+   next-hop-self
+  !
+  address-family vpnv4 unicast
+   next-hop-self
+  !
+  address-family ipv6 unicast
+   next-hop-self
+  !
+  address-family vpnv6 unicast
+   next-hop-self
+  !
+  address-family link-state link-state
+   route-policy drop in
+   route-policy pass out
+  !
+  address-family ipv4 sr-policy
+  !
+ !
+ neighbor 10.0.32.1
+  remote-as 64032
+  egress-engineering
+  description R32 border leaf
+  bmp-activate server 1
+  bmp-activate server 2
+  address-family ipv4 unicast
+   route-policy pass in
+   route-policy pass out
+  !
+  address-family ipv4 labeled-unicast
+   route-policy pass in
+   route-policy pass out
+  !
+  address-family vpnv4 unicast
+   route-policy pass in
+   route-policy pass out
+  !
+  address-family link-state link-state
+   route-policy pass in
+   route-policy drop out
+  !
+ !
+ neighbor 10.0.33.1
+  remote-as 64033
+  egress-engineering
+  description R33 border leaf
+  bmp-activate server 1
+  bmp-activate server 2
+  address-family ipv4 unicast
+   route-policy pass in
+   route-policy pass out
+  !
+  address-family ipv4 labeled-unicast
+   route-policy pass in
+   route-policy pass out
+  !
+  address-family vpnv4 unicast
+   route-policy pass in
+   route-policy pass out
+  !
+  address-family link-state link-state
+   route-policy pass in
+   route-policy drop out
+  !
+ !
+ neighbor 2001:420:ffff::1
+  remote-as 64032
+  egress-engineering
+  description R32 ipv6
+  bmp-activate server 1
+  bmp-activate server 2
+  address-family ipv6 unicast
+   route-policy pass in
+   route-policy pass out
+  !
+  address-family vpnv6 unicast
+   route-policy pass in
+   route-policy pass out
+  !
+ !
+ neighbor 2001:420:ffff::5
+  remote-as 64033
+  description R33 ipv6
+  address-family ipv6 unicast
+   route-policy pass in
+   route-policy pass out
+  !
+  address-family vpnv6 unicast
+   route-policy pass in
+   route-policy pass out
+  !
+ !
+!
+bmp server 1
+ host 10.200.99.7 port 30511
+ description voltron GoBMP  
+ update-source MgmtEth0/RP0/CPU0/0
+ flapping-delay 60
+ initial-delay 5
+ stats-reporting-period 60
+ initial-refresh delay 30 spread 2
+!
+bmp server 2
+ host 10.200.99.2 port 30511
+ description jalapeno gobmp
+ update-source MgmtEth0/RP0/CPU0/0
+ flapping-delay 60
+ initial-delay 5
+ stats-reporting-period 60
+ initial-refresh delay 30 spread 2
+!
+mpls oam
+!
+segment-routing
+ global-block 100000 163999
+ traffic-eng
+  interface GigabitEthernet0/0/0/2
+   metric 200
+  !
+  segment-list R05-2
+   index 10 mpls label 100002
+   index 20 mpls label 100005
+  !
+  segment-list R05-4
+   index 10 mpls label 100004
+   index 20 mpls label 100005
+  !
+  segment-list R05-9
+   index 10 mpls label 100009
+   index 20 mpls label 100005
+  !
+  segment-list R07-long
+   index 10 mpls label 100002
+   index 20 mpls label 100007
+  !       
+  segment-list R06-short
+   index 10 mpls label 100006
+  !
+  segment-list R07-long2
+   index 10 mpls label 100009
+   index 20 mpls label 100003
+   index 30 mpls label 100007
+  !
+  segment-list R07-vrf-green-short
+   index 10 mpls label 100004
+   index 20 mpls label 100007
+  !
+  on-demand color 601
+   dynamic
+    metric
+     type igp
+    !
+    sid-algorithm 128
+   !
+  !
+  on-demand color 1500
+   dynamic
+    metric
+     type igp
+    !
+    sid-algorithm 128
+   !
+  !
+  on-demand color 1600
+   dynamic
+    sid-algorithm 128
+   !
+  !
+  on-demand color 1700
+   per-flow
+    forward-class 0 color 1701
+    forward-class 1 color 1702
+    forward-class 2 color 1703
+    forward-class default 0
+   !
+  !
+  policy R05
+   color 500 end-point ipv4 10.0.0.5
+   candidate-paths
+    preference 200
+     explicit segment-list R05-2
+      weight 4
+     !
+     explicit segment-list R05-4
+      weight 2
+     !
+     explicit segment-list R05-9
+      weight 2
+     !
+    !
+   !
+  !
+  policy R07-long
+   color 1515 end-point ipv4 10.0.0.7
+   candidate-paths
+    preference 100
+     explicit segment-list R07-long
+      weight 50
+     !
+     explicit segment-list R07-long2
+      weight 30
+     !
+     explicit segment-list R07-green01-long
+      weight 20
+     !
+    !
+    preference 200
+     explicit segment-list R07-long
+      weight 50
+     !
+     explicit segment-list R07-green01-long
+      weight 50
+     !
+    !
+   !
+  !
+  policy R06-short
+   color 600 end-point ipv4 10.0.0.6
+   candidate-paths
+    preference 100
+     explicit segment-list R06-short
+     !
+    !
+    preference 200
+     dynamic
+      metric
+       type igp
+      !
+     !
+    !
+   !
+  !
+  policy R07-FA-128
+   color 1600 end-point ipv4 10.0.0.7
+  !
+  policy R07-green01-long
+   binding-sid mpls 80115
+   color 100 end-point ipv4 10.0.0.7
+   candidate-paths
+    preference 100
+     explicit segment-list R07-long
+     !
+     explicit segment-list R07-green01-long
+     !
+    !
+   !
+  !
+  policy R07-green02-long
+   binding-sid mpls 80215
+   color 200 end-point ipv4 10.0.0.7
+   candidate-paths
+    preference 100
+     explicit segment-list R07-long2
+     !
+    !
+   !
+  !
+ !
+ srv6
+  encapsulation
+   source-address 2001:1:1:f001::1
+  !
+  locators
+   locator BGP
+    prefix 2001:1:1:f101::/64
+   !
+   locator MAIN
+    prefix 2001:1:1:f001::/64
+   !
+  !
+ !
+!
+netconf agent tty
+!
+lldp
+!
+performance-measurement
+ interface GigabitEthernet0/0/0/3
+  delay-measurement
+   advertise-delay 100
+  !
+ !
+ interface GigabitEthernet0/0/0/4
+  delay-measurement
+   advertise-delay 100
+  !
+ !
+!
+ssh server rate-limit 600
+ssh server session-limit 100
+ssh server v2
+ssh server vrf default
+ssh server netconf vrf default
+end
+
+
+
+
+hostname R02
+username cisco
+ group root-lr
+ group cisco-support
+ secret 10 $6$dbIC117ZnktAA11.$3TNZDdWpzUiG9mPFNcKTCKU2ihAflH0y9hGmzil3ZZmAK8bhu72djNmJ6EhwIjfwI6R8gNGZkbDqDBPhYRaiJ.
+!
+grpc
+ port 57400
+ no-tls
+ address-family ipv4
+ service-layer
+ !
+!
+telemetry model-driven
+ destination-group jalapeno
+  address-family ipv4 10.0.254.1 port 32400
+   encoding self-describing-gpb
+   protocol grpc no-tls
+  !
+ !
+ sensor-group cisco_models
+  sensor-path Cisco-IOS-XR-pfi-im-cmd-oper:interfaces/interface-xr/interface
+  sensor-path Cisco-IOS-XR-fib-common-oper:mpls-forwarding/nodes/node/label-fib/forwarding-details/forwarding-detail
+ !
+ sensor-group openconfig_interfaces
+  sensor-path openconfig-interfaces:interfaces
+  sensor-path openconfig-interfaces:interfaces/interface
+ !
+ subscription base_metrics
+  sensor-group-id cisco_models sample-interval 10000
+  sensor-group-id openconfig_interfaces sample-interval 10000
+  destination-id jalapeno
+ !
+!         
+tpa
+ vrf default
+  address-family ipv4
+   default-route mgmt
+   update-source dataports Loopback0
+  !
+ !
+!
+call-home
+ service active
+ contact smart-licensing
+ profile CiscoTAC-1
+  active
+  destination transport-method http
+ !
+!
+netconf-yang agent
+ ssh
+!
+interface Loopback0
+ ipv4 address 10.0.0.2 255.255.255.255
+ ipv6 address 2001:1:1:f002::1/128
+!
+interface MgmtEth0/RP0/CPU0/0
+ description mgt  
+ ipv4 address 10.251.253.102 255.255.255.0
+!
+interface GigabitEthernet0/0/0/0
+ description to r00 
+ ipv4 address 10.1.1.3 255.255.255.254
+ ipv6 address 2001:1:1:1::3/127
+!
+interface GigabitEthernet0/0/0/1
+ description to r06  
+ ipv4 address 10.1.1.8 255.255.255.254
+ ipv6 address 2001:1:1:1::8/127
+!
+interface GigabitEthernet0/0/0/2
+ description to r07 no longer in use
+ ipv4 address 10.1.1.10 255.255.255.254
+ ipv6 address 2001:1:1:1::10/127
+ shutdown
+!
+interface GigabitEthernet0/0/0/3
+ description to r08  no longer in use
+ ipv4 address 10.1.1.14 255.255.255.254
+ ipv6 address 2001:1:1:1::14/127
+ shutdown
+!
+interface GigabitEthernet0/0/0/4
+ description to r03
+ ipv4 address 10.1.1.18 255.255.255.254
+ ipv6 address 2001:1:1:1::18/127
+!
+interface GigabitEthernet0/0/0/5
+ description to r70
+ ipv4 address 10.1.1.32 255.255.255.254
+ ipv6 address 2001:1:1:1::32/127
+!
+interface GigabitEthernet0/0/0/6
+ description to r01
+ ipv4 address 10.1.1.41 255.255.255.254
+ ipv6 address 2001:1:1:1::41/127
+!
+interface GigabitEthernet0/0/0/7
+ description scapy
+!
+interface GigabitEthernet0/0/0/8
+ description to DC R32
+ ipv4 address 10.0.32.2 255.255.255.254
+ ipv6 address 2001:420:ffff::2/127
+!         
+interface GigabitEthernet0/0/0/9
+ description to DC R33
+ ipv4 address 10.0.33.2 255.255.255.254
+ ipv6 address 2001:420:ffff::6/127
+!
+route-policy SID($SID)
+  set label-index $SID
+end-policy
+!
+route-policy drop
+  drop
+end-policy
+!
+route-policy pass
+  pass
+end-policy
+!
+router static
+ address-family ipv4 unicast
+  10.200.99.0/24 MgmtEth0/RP0/CPU0/0 10.251.253.1
+ !
+!
+router isis 100
+ is-type level-2-only
+ net 49.0901.0000.0000.0002.00
+ distribute link-state level 2
+ nsf ietf
+ flex-algo 128
+  priority 128
+ !
+ address-family ipv4 unicast
+  metric-style wide
+  mpls traffic-eng level-2-only
+  mpls traffic-eng router-id Loopback0
+  maximum-paths 32
+  segment-routing mpls
+ !
+ address-family ipv6 unicast
+  metric-style wide
+  advertise link attributes
+  maximum-paths 32
+  segment-routing srv6
+   locator MAIN
+   !
+  !
+ !
+ interface Loopback0
+  passive
+  address-family ipv4 unicast
+   prefix-sid index 2
+   prefix-sid algorithm 128 index 10002
+  !
+  address-family ipv6 unicast
+  !
+ !
+ interface GigabitEthernet0/0/0/0
+  circuit-type level-2-only
+  point-to-point
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+ !
+ interface GigabitEthernet0/0/0/1
+  circuit-type level-2-only
+  point-to-point
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+ !
+ interface GigabitEthernet0/0/0/4
+  circuit-type level-2-only
+  point-to-point
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+ !
+ interface GigabitEthernet0/0/0/5
+  circuit-type level-2-only
+  point-to-point
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+ !
+ interface GigabitEthernet0/0/0/6
+  circuit-type level-2-only
+  point-to-point
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+ !
+!
+router bgp 100000
+ bgp router-id 10.0.0.2
+ segment-routing srv6
+  locator MAIN
+ !
+ bgp bestpath as-path multipath-relax
+ address-family ipv4 unicast
+  additional-paths receive
+  maximum-paths ebgp 32
+  network 10.0.0.2/32 route-policy SID(2)
+  allocate-label all
+ !
+ address-family vpnv4 unicast
+  retain route-target all
+ !
+ address-family ipv6 unicast
+  additional-paths receive
+  maximum-paths ebgp 32
+  network 2001:1:1:f002::1/128
+ !
+ address-family vpnv6 unicast
+ !
+ address-family link-state link-state
+ !
+ neighbor 10.0.0.10
+  remote-as 100000
+  description iBGP to r10 
+  update-source Loopback0
+  address-family ipv4 unicast
+   next-hop-self
+  !
+  address-family ipv4 labeled-unicast
+   next-hop-self
+  !
+  address-family vpnv4 unicast
+   next-hop-self
+  !
+  address-family ipv6 unicast
+   next-hop-self
+  !
+  address-family vpnv6 unicast
+   next-hop-self
+  !
+ !        
+ neighbor 10.0.32.3
+  remote-as 64032
+  egress-engineering
+  description R32 border leaf
+  bmp-activate server 1
+  address-family ipv4 unicast
+   route-policy pass in
+   route-policy pass out
+  !
+  address-family ipv4 labeled-unicast
+   route-policy pass in
+   route-policy pass out
+  !
+  address-family vpnv4 unicast
+   route-policy pass in
+   route-policy pass out
+  !
+  address-family link-state link-state
+   route-policy pass in
+   route-policy drop out
+  !
+ !
+ neighbor 10.0.33.3
+  remote-as 64033
+  egress-engineering
+  description R33 border leaf
+  bmp-activate server 1
+  address-family ipv4 unicast
+   route-policy pass in
+   route-policy pass out
+  !
+  address-family ipv4 labeled-unicast
+   route-policy pass in
+   route-policy pass out
+  !
+  address-family vpnv4 unicast
+   route-policy pass in
+   route-policy pass out
+  !
+  address-family link-state link-state
+   route-policy pass in
+   route-policy drop out
+  !
+ !
+!
+bmp server 1
+ host 10.200.99.2 port 30511
+ description voltron GoBMP  
+ update-source MgmtEth0/RP0/CPU0/0
+ flapping-delay 60
+ initial-delay 5
+ stats-reporting-period 60
+ initial-refresh delay 30 spread 2
+!
+mpls oam
+!
+segment-routing
+ global-block 100000 163999
+ srv6
+  encapsulation
+   source-address 2001:1:1:f002::1
+  !
+  locators
+   locator MAIN
+    prefix 2001:1:1:f002::/64
+   !
+  !
+ !
+!
+netconf agent tty
+!
+ssh server rate-limit 600
+ssh server session-limit 100
+ssh server v2
+ssh server vrf default
+ssh server netconf vrf default
+performance-measurement
+ interface GigabitEthernet0/0/0/2
+  delay-measurement
+   advertise-delay 100
+  !
+ !
+ interface GigabitEthernet0/0/0/3
+  delay-measurement
+   advertise-delay 100
+  !
+ !
+ interface GigabitEthernet0/0/0/4
+  delay-measurement
+   advertise-delay 100
+  !
+ !
+!
+end
+
+RP/0/RP0/CPU0:R02#    exit
+Connection to 10.251.253.102 closed.
+brmcdoug@naja:~$ ssh cisco@10.251.253.103
+Password: 
+
+
+RP/0/RP0/CPU0:R03#sho run
+Thu Feb 27 17:01:30.529 UTC
+Building configuration...
+!! IOS XR Configuration 7.3.1.21I
+!! Last configuration change at Thu Feb 27 16:55:33 2020 by cisco
+!
+hostname R03
+username cisco
+ group root-lr
+ group cisco-support
+ secret 10 $6$iy82R0j0FbEo7R0.$qY9yts7YNfS0911PmauAMcSg.kQrSEJ5QqhBZ.mq15vNDLAZmqimZC/3x4PoqEN6jmeMAa1ERsRyWNiISmUQf.
+!
+grpc
+ port 57400
+ address-family ipv4
+ service-layer
+ !
+!
+telemetry model-driven
+ destination-group jalapeno
+  address-family ipv4 10.0.254.1 port 32400
+   encoding self-describing-gpb
+   protocol grpc no-tls
+  !
+ !
+ sensor-group cisco_models
+  sensor-path Cisco-IOS-XR-pfi-im-cmd-oper:interfaces/interface-xr/interface
+  sensor-path Cisco-IOS-XR-fib-common-oper:mpls-forwarding/nodes/node/label-fib/forwarding-details/forwarding-detail
+ !
+ sensor-group openconfig_interfaces
+  sensor-path openconfig-interfaces:interfaces
+  sensor-path openconfig-interfaces:interfaces/interface
+ !
+ subscription base_metrics
+  sensor-group-id cisco_models sample-interval 10000
+  sensor-group-id openconfig_interfaces sample-interval 10000
+  destination-id jalapeno
+ !
+!
+vrf beta  
+ address-family ipv4 unicast
+  import route-target
+   211:211
+  !
+  export route-target
+   211:211
+   311:311
+  !
+ !
+!
+vrf alpha
+ address-family ipv4 unicast
+  import route-target
+   210:210
+   310:310
+  !
+  export route-target
+   210:210
+   310:310
+  !
+ !
+!
+tpa
+ vrf default
+  address-family ipv4
+   default-route mgmt
+   update-source dataports MgmtEth0/RP0/CPU0/0
+  !
+ !
+!
+call-home
+ service active
+ contact smart-licensing
+ profile CiscoTAC-1
+  active
+  destination transport-method http
+ !
+!
+netconf-yang agent
+ ssh
+!
+interface Loopback0
+ ipv4 address 10.0.0.3 255.255.255.255
+ ipv6 address 2001:1:1:f003::1/128
+!
+interface Loopback210
+ vrf alpha
+ ipv4 address 210.210.3.1 255.255.255.0
+!
+interface Loopback211
+ vrf beta
+ ipv4 address 211.211.3.1 255.255.255.0
+!
+interface MgmtEth0/RP0/CPU0/0
+ description mgt  
+ ipv4 address 10.251.253.103 255.255.255.0
+!
+interface GigabitEthernet0/0/0/0
+ description to r02 
+ ipv4 address 10.1.1.19 255.255.255.254
+ ipv6 address 2001:1:1:1::19/127
+!
+interface GigabitEthernet0/0/0/1
+ description r01 no longer in use
+ ipv4 address 10.1.1.17 255.255.255.254
+ ipv6 address 2001:1:1:1::17/127
+ shutdown
+!
+interface GigabitEthernet0/0/0/2
+ description to r04  
+ ipv4 address 10.1.1.20 255.255.255.254
+ ipv6 address 2001:1:1:1::20/127
+!
+interface GigabitEthernet0/0/0/3
+ description to vrf alpha 
+ ipv4 address 172.16.103.1 255.255.255.0
+!
+interface GigabitEthernet0/0/0/4
+ shutdown
+!
+interface GigabitEthernet0/0/0/5
+ shutdown
+!
+interface GigabitEthernet0/0/0/6
+ shutdown
+!
+interface GigabitEthernet0/0/0/7
+ description scapy
+!
+interface GigabitEthernet0/0/0/8
+ shutdown
+!
+interface GigabitEthernet0/0/0/9
+ shutdown
+!
+route-policy SID($SID)
+  set label-index $SID
+end-policy
+!
+route-policy drop
+  drop
+end-policy
+!
+route-policy pass
+  pass
+end-policy
+!
+router isis 100
+ is-type level-2-only
+ net 49.0901.0000.0000.0003.00
+ distribute link-state level 2
+ nsf ietf
+ flex-algo 128
+  priority 128
+ !
+ address-family ipv4 unicast
+  metric-style wide
+  advertise link attributes
+  mpls traffic-eng level-2-only
+  mpls traffic-eng router-id Loopback0
+  maximum-paths 32
+  segment-routing mpls
+ !
+ address-family ipv6 unicast
+  metric-style wide
+  advertise link attributes
+  maximum-paths 32
+  segment-routing srv6
+   locator MAIN
+   !
+  !
+ !
+ interface Loopback0
+  passive
+  address-family ipv4 unicast
+   prefix-sid index 3
+   prefix-sid algorithm 128 absolute 110003
+  !
+  address-family ipv6 unicast
+  !
+ !
+ interface GigabitEthernet0/0/0/0
+  circuit-type level-2-only
+  point-to-point
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+ !
+ interface GigabitEthernet0/0/0/2
+  circuit-type level-2-only
+  point-to-point
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+ !
+ interface GigabitEthernet0/0/0/3
+  circuit-type level-2-only
+  point-to-point
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+ !
+ interface GigabitEthernet0/0/0/4
+  circuit-type level-2-only
+  point-to-point
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+ !
+ interface GigabitEthernet0/0/0/5
+  circuit-type level-2-only
+  point-to-point
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+ !
+!
+router bgp 100000
+ bgp router-id 10.0.0.3
+ segment-routing srv6
+  locator MAIN
+ !
+ bgp bestpath as-path multipath-relax
+ address-family ipv4 unicast
+  additional-paths receive
+  maximum-paths ebgp 32
+  network 10.0.0.3/32 route-policy SID(3)
+  allocate-label all
+ !
+ address-family vpnv4 unicast
+  retain route-target all
+ !
+ address-family ipv6 unicast
+  additional-paths receive
+  maximum-paths ebgp 32
+  network 2001:1:1:f003::1/128
+ !
+ address-family vpnv6 unicast
+ !
+ neighbor 2001:1:1:f010::1
+  remote-as 100000
+  description iBGP to r10 
+  update-source Loopback0
+  address-family ipv4 unicast
+   next-hop-self
+  !
+  address-family vpnv4 unicast
+   next-hop-self
+  !
+  address-family ipv6 unicast
+   next-hop-self
+  !
+  address-family vpnv6 unicast
+   next-hop-self
+  !
+ !
+ vrf beta
+  rd auto
+  address-family ipv4 unicast
+   segment-routing srv6
+    locator MAIN
+    alloc mode per-vrf
+   !
+   redistribute connected
+  !
+ !
+ vrf alpha
+  rd auto
+  address-family ipv4 unicast
+   segment-routing srv6
+    locator MAIN
+    alloc mode per-vrf
+   !
+   redistribute connected
+  !
+ !
+!
+bmp server 1
+ host 10.0.254.1 port 30511
+ description voltron GoBMP  
+ update-source Loopback0
+ flapping-delay 60
+ initial-delay 5
+ stats-reporting-period 60
+ initial-refresh delay 30 spread 2
+!
+mpls oam
+!
+segment-routing
+ global-block 100000 163999
+ srv6
+  encapsulation
+   source-address 2001:1:1:f003::1
+  !
+  locators
+   locator MAIN
+    prefix 2001:1:1:f003::/64
+   !
+  !
+ !
+!
+netconf agent tty
+!
+ssh server rate-limit 600
+ssh server session-limit 100
+ssh server v2
+ssh server vrf default
+ssh server netconf vrf default
+performance-measurement
+ interface GigabitEthernet0/0/0/0
+  delay-measurement
+   advertise-delay 200
+  !
+ !
+ interface GigabitEthernet0/0/0/1
+  delay-measurement
+   advertise-delay 200
+  !
+ !        
+!
+end
+
+RP/0/RP0/CPU0:R03# exit
+Connection to 10.251.253.103 closed.
+brmcdoug@naja:~$ ssh cisco@10.251.253.104
+Password: 
+
+
+RP/0/RP0/CPU0:R04#sho run
+Thu Feb 27 17:19:01.448 UTC
+Building configuration...
+!! IOS XR Configuration 7.3.1.21I
+!! Last configuration change at Thu Feb 27 16:56:11 2020 by cisco
+!
+hostname R04
+username cisco
+ group root-lr
+ group cisco-support
+ secret 10 $6$r.wwZ/.DTNnL4Z/.$xcxzG13nJ/oE4wH7YllDOVh/9XflzYV1kkGcB/ty2TC04m8U2H40P/Dm3sn1kBa6IRtX0F.6b/twf6i/Na5EP.
+!
+grpc
+ port 57400
+ no-tls
+ address-family ipv4
+ service-layer
+ !
+!
+telemetry model-driven
+ destination-group jalapeno
+  address-family ipv4 10.0.254.1 port 32400
+   encoding self-describing-gpb
+   protocol grpc no-tls
+  !
+ !
+ sensor-group cisco_models
+  sensor-path Cisco-IOS-XR-pfi-im-cmd-oper:interfaces/interface-xr/interface
+  sensor-path Cisco-IOS-XR-fib-common-oper:mpls-forwarding/nodes/node/label-fib/forwarding-details/forwarding-detail
+ !
+ sensor-group openconfig_interfaces
+  sensor-path openconfig-interfaces:interfaces
+  sensor-path openconfig-interfaces:interfaces/interface
+ !
+ subscription base_metrics
+  sensor-group-id cisco_models sample-interval 10000
+  sensor-group-id openconfig_interfaces sample-interval 10000
+  destination-id jalapeno
+ !
+!         
+vrf beta
+ address-family ipv4 unicast
+  import route-target
+   211:211
+  !
+  export route-target
+   211:211
+   311:311
+   411:411
+  !
+ !
+!
+vrf alpha
+ address-family ipv4 unicast
+  import route-target
+   210:210
+   310:310
+  !
+  export route-target
+   210:210
+   310:310
+  !
+ !
+!
+address-family ipv4 unicast
+!
+tpa
+ vrf default
+  address-family ipv4
+   default-route mgmt
+   update-source dataports Loopback0
+  !
+ !
+!
+call-home
+ service active
+ contact smart-licensing
+ profile CiscoTAC-1
+  active
+  destination transport-method http
+ !
+!
+netconf-yang agent
+ ssh
+!
+interface Loopback0
+ ipv4 address 10.0.0.4 255.255.255.255
+ ipv6 address 2001:1:1:f004::1/128
+!
+interface Loopback210
+ vrf alpha
+ ipv4 address 210.210.4.1 255.255.255.0
+!
+interface Loopback211
+ vrf beta
+ ipv4 address 211.211.4.1 255.255.255.0
+!
+interface MgmtEth0/RP0/CPU0/0
+ description mgt  
+ ipv4 address 10.251.253.104 255.255.255.0
+!
+interface GigabitEthernet0/0/0/0
+ description to r03 
+ ipv4 address 10.1.1.21 255.255.255.254
+ ipv6 address 2001:1:1:1::21/127
+!
+interface GigabitEthernet0/0/0/1
+ description to r05 
+ ipv4 address 10.1.1.22 255.255.255.254
+ ipv6 address 2001:1:1:1::22/127
+!
+interface GigabitEthernet0/0/0/2
+ description to R07
+ ipv4 address 10.1.1.65 255.255.255.254
+ ipv6 address 2001:1:1:1::65/127
+!
+interface GigabitEthernet0/0/0/3
+ shutdown
+!
+interface GigabitEthernet0/0/0/4
+ shutdown
+!
+interface GigabitEthernet0/0/0/5
+ shutdown
+!
+interface GigabitEthernet0/0/0/6
+ shutdown
+!
+interface GigabitEthernet0/0/0/7
+ description scapy
+!
+interface GigabitEthernet0/0/0/8
+ shutdown
+!
+interface GigabitEthernet0/0/0/9
+ shutdown
+!
+route-policy SID($SID)
+  set label-index $SID
+end-policy
+!
+route-policy drop
+  drop
+end-policy
+!
+route-policy pass
+  pass
+end-policy
+!
+router isis 100
+ is-type level-2-only
+ net 49.0901.0000.0000.0004.00
+ distribute link-state level 2
+ nsf ietf
+ address-family ipv4 unicast
+  metric-style wide
+  mpls traffic-eng level-2-only
+  mpls traffic-eng router-id Loopback0
+  maximum-paths 32
+  segment-routing mpls
+ !
+ address-family ipv6 unicast
+  metric-style wide
+  advertise link attributes
+  maximum-paths 32
+  segment-routing srv6
+   locator MAIN
+   !
+  !
+ !
+ interface Loopback0
+  passive
+  address-family ipv4 unicast
+   prefix-sid index 4
+   prefix-sid algorithm 128 index 10004
+  !
+  address-family ipv6 unicast
+  !
+ !
+ interface GigabitEthernet0/0/0/0
+  circuit-type level-2-only
+  point-to-point
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+ !
+ interface GigabitEthernet0/0/0/1
+  circuit-type level-2-only
+  point-to-point
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+ !
+ interface GigabitEthernet0/0/0/2
+  circuit-type level-2-only
+  point-to-point
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !       
+  address-family ipv6 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+ !
+!
+router bgp 100000
+ bgp router-id 10.0.0.4
+ segment-routing srv6
+  locator MAIN
+ !
+ bgp bestpath as-path multipath-relax
+ address-family ipv4 unicast
+  additional-paths receive
+  maximum-paths ebgp 32
+  network 10.0.0.4/32 route-policy SID(4)
+  allocate-label all
+ !
+ address-family vpnv4 unicast
+  retain route-target all
+ !
+ address-family ipv6 unicast
+  additional-paths receive
+  maximum-paths ebgp 32
+  network 2001:1:1:f004::1/128
+ !
+ address-family vpnv6 unicast
+ !
+ neighbor 2001:1:1:f010::1
+  remote-as 100000
+  description iBGP to r10 
+  update-source Loopback0
+  address-family ipv4 unicast
+   next-hop-self
+  !
+  address-family vpnv4 unicast
+   next-hop-self
+  !
+  address-family ipv6 unicast
+   next-hop-self
+  !
+  address-family vpnv6 unicast
+   next-hop-self
+  !
+ !
+ vrf beta
+  rd auto
+  address-family ipv4 unicast
+   segment-routing srv6
+    locator MAIN
+    alloc mode per-vrf
+   !
+   redistribute connected
+  !
+ !
+ vrf alpha
+  rd auto
+  address-family ipv4 unicast
+   segment-routing srv6
+    locator MAIN
+    alloc mode per-vrf
+   !
+   redistribute connected
+  !
+ !
+!
+bmp server 1
+ host 10.0.254.1 port 30511
+ description voltron GoBMP  
+ update-source Loopback0
+ flapping-delay 60
+ initial-delay 5
+ stats-reporting-period 60
+ initial-refresh delay 30 spread 2
+!
+mpls oam
+!
+segment-routing
+ global-block 100000 163999
+ srv6
+  encapsulation
+   source-address 2001:1:1:f004::1
+  !
+  locators
+   locator MAIN
+    prefix 2001:1:1:f004::/64
+   !
+  !
+ !
+!
+netconf agent tty
+!
+ssh server rate-limit 600
+ssh server session-limit 100
+ssh server v2
+ssh server vrf default
+ssh server netconf vrf default
+end
+
+ RP/0/RP0/CPU0:R04#         exit
+Connection to 10.251.253.104 closed.
+brmcdoug@naja:~$ ssh cisco@10.251.253.105
+Password: 
+
+
+RP/0/RP0/CPU0:R05#sho run
+Thu Feb 27 16:56:46.564 UTC
+Building configuration...
+!! IOS XR Configuration 7.3.1.21I
+!! Last configuration change at Thu Feb 27 16:34:22 2020 by cisco
+!
+hostname R05
+username cisco
+ group root-lr
+ group cisco-support
+ secret 10 $6$GXFSDMYr1txD....$09ETAo1VMaFVXEu9HMDuV9y8fpXbZIHhgWe8nqvxotAaOOaTCxsC8QBzp3g1aVHFZUOtPuLFeLOaL.XsIpQHw.
+!
+grpc
+ port 57400
+ no-tls
+ address-family ipv4
+ service-layer
+ !
+!
+telemetry model-driven
+ destination-group jalapeno
+  address-family ipv4 10.0.254.1 port 32400
+   encoding self-describing-gpb
+   protocol grpc no-tls
+  !
+ !
+ sensor-group cisco_models
+  sensor-path Cisco-IOS-XR-pfi-im-cmd-oper:interfaces/interface-xr/interface
+  sensor-path Cisco-IOS-XR-fib-common-oper:mpls-forwarding/nodes/node/label-fib/forwarding-details/forwarding-detail
+ !
+ sensor-group openconfig_interfaces
+  sensor-path openconfig-interfaces:interfaces
+  sensor-path openconfig-interfaces:interfaces/interface
+ !
+ subscription base_metrics
+  sensor-group-id cisco_models sample-interval 10000
+  sensor-group-id openconfig_interfaces sample-interval 10000
+  destination-id jalapeno
+ !
+!         
+vrf green
+ address-family ipv4 unicast
+  import route-target
+   200:200
+  !
+  export route-target
+   200:200
+  !
+ !
+!
+vrf orange
+ address-family ipv4 unicast
+  import route-target
+   100:100
+   101:101
+  !
+  export route-target
+   100:100
+   101:101
+  !
+ !
+ address-family ipv6 unicast
+  import route-target
+   100:100
+   101:101
+  !
+  export route-target
+   100:100
+   101:101
+  !
+ !
+!
+vrf add-path
+ address-family ipv4 unicast
+  import route-target
+   700:700
+  !
+  export route-target
+   700:700
+  !
+ !
+!
+tpa
+ vrf default
+  address-family ipv4
+   default-route mgmt
+   update-source dataports Loopback0
+  !
+ !
+!
+call-home
+ service active
+ contact smart-licensing
+ profile CiscoTAC-1
+  active
+  destination transport-method http
+ !
+!
+netconf-yang agent
+ ssh
+!
+interface Loopback0
+ ipv4 address 10.0.0.5 255.255.255.255
+ ipv6 address 2001:1:1:f005::1/128
+!
+interface Loopback100
+ vrf orange
+ ipv4 address 100.100.5.1 255.255.255.0
+!
+interface Loopback101
+ vrf orange
+ ipv4 address 100.100.7.5 255.255.255.0
+!
+interface Loopback200
+ vrf green
+ ipv4 address 200.200.5.1 255.255.255.0
+!
+interface Loopback700
+ vrf add-path
+ ipv4 address 10.70.70.5 255.255.255.0
+!
+interface MgmtEth0/RP0/CPU0/0
+ description mgt  
+ ipv4 address 10.251.253.105 255.255.255.0
+!
+interface GigabitEthernet0/0/0/0
+ description to r04 
+ ipv4 address 10.1.1.23 255.255.255.254
+ ipv6 address 2001:1:1:1::23/127
+!
+interface GigabitEthernet0/0/0/1
+ description - this used to go to R09 but has changed since Hughes lab
+ ipv4 address 10.1.1.24 255.255.255.254
+ ipv6 address 2001:1:1:1::24/127
+ shutdown
+!
+interface GigabitEthernet0/0/0/2
+ description to NCS-clients
+ ipv4 address 10.0.252.1 255.255.255.0
+ ipv6 address 2001:1:1:252::1/64
+!
+interface GigabitEthernet0/0/0/3
+ description vrf orange
+ vrf orange
+ ipv4 address 172.16.5.0 255.255.255.254
+!
+interface GigabitEthernet0/0/0/4
+ description to R16
+ ipv4 address 10.1.1.42 255.255.255.254
+ ipv6 address 2001:1:1:1::42/127
+!
+interface GigabitEthernet0/0/0/5
+ description to R16
+ ipv4 address 10.1.1.42 255.255.255.254
+ ipv6 address 2001:1:1:1::42/127
+!
+interface GigabitEthernet0/0/0/6
+ shutdown
+!
+interface GigabitEthernet0/0/0/7
+ description scapy
+!
+interface GigabitEthernet0/0/0/8
+ shutdown
+!
+interface GigabitEthernet0/0/0/9
+ shutdown
+!
+route-policy SID($SID)
+  set label-index $SID
+end-policy
+!
+route-policy drop
+  drop
+end-policy
+!
+route-policy pass
+  pass
+end-policy
+!
+router isis 100
+ is-type level-2-only
+ net 49.0901.0000.0000.0005.00
+ distribute link-state level 2
+ nsf ietf
+ address-family ipv4 unicast
+  metric-style wide
+  mpls traffic-eng level-2-only
+  mpls traffic-eng router-id Loopback0
+  maximum-paths 32
+  segment-routing mpls
+ !
+ address-family ipv6 unicast
+  metric-style wide
+  advertise link attributes
+  maximum-paths 32
+  segment-routing srv6
+   locator MAIN
+   !
+  !
+ !
+ interface Loopback0
+  passive
+  address-family ipv4 unicast
+   prefix-sid index 5
+   prefix-sid algorithm 129 index 20005
+  !
+  address-family ipv6 unicast
+  !
+ !
+ interface GigabitEthernet0/0/0/0
+  circuit-type level-2-only
+  point-to-point
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+ !
+ interface GigabitEthernet0/0/0/1
+  circuit-type level-2-only
+  point-to-point
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+ !
+ interface GigabitEthernet0/0/0/4
+  circuit-type level-2-only
+  point-to-point
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+ !
+!
+router bgp 100000
+ bgp router-id 10.0.0.5
+ segment-routing srv6
+  locator MAIN
+ !
+ bgp bestpath as-path multipath-relax
+ address-family ipv4 unicast
+  additional-paths receive
+  maximum-paths ebgp 32
+  network 10.0.0.5/32 route-policy SID(5)
+  allocate-label all
+ !
+ address-family vpnv4 unicast
+  retain route-target all
+ !
+ address-family ipv6 unicast
+  additional-paths receive
+  maximum-paths ebgp 32
+  network 2001:1:1:f005::1/128
+ !
+ address-family vpnv6 unicast
+ !
+ neighbor 10.0.0.10
+  remote-as 100000
+  description iBGP to r10 
+  update-source Loopback0
+  address-family ipv4 unicast
+   next-hop-self
+  !
+  address-family ipv4 labeled-unicast
+   next-hop-self
+  !
+  address-family vpnv4 unicast
+   next-hop-self
+  !
+  address-family ipv6 unicast
+   next-hop-self
+  !
+  address-family vpnv6 unicast
+   next-hop-self
+  !
+ !
+ vrf green
+  rd auto
+  address-family ipv4 unicast
+   redistribute connected
+  !
+ !
+ vrf orange
+  rd auto
+  address-family ipv4 unicast
+   redistribute connected
+  !
+ !
+ vrf add-path
+  rd 700:700
+  address-family ipv4 unicast
+   redistribute connected
+  !
+ !
+!
+bmp server 1
+ host 10.0.254.1 port 30511
+ description voltron GoBMP  
+ update-source Loopback0
+ flapping-delay 60
+ initial-delay 5
+ stats-reporting-period 60
+ initial-refresh delay 30 spread 2
+!
+mpls oam
+!
+segment-routing
+ global-block 100000 163999
+ srv6
+  encapsulation
+   source-address 2001:1:1:f005::1
+  !
+  locators
+   locator MAIN
+    prefix 2001:1:1:f005::/64
+   !
+  !
+ !
+!
+netconf agent tty
+!
+ssh server rate-limit 600
+ssh server session-limit 100
+ssh server v2
+ssh server vrf default
+ssh server netconf vrf default
+end
+
+RP/0/RP0/CPU0:R05#      exit
+Connection to 10.251.253.105 closed.
+brmcdoug@naja:~$ ssh cisco@10.251.253.106
+Password: 
+
+
+RP/0/RP0/CPU0:R06#sho run
+Thu Feb 27 16:58:19.159 UTC
+Building configuration...
+!! IOS XR Configuration 7.3.1.21I
+!! Last configuration change at Thu Feb 20 15:48:45 2020 by cisco
+!
+hostname R06
+username cisco
+ group root-lr
+ group cisco-support
+ secret 10 $6$xz4LmjlZAQ71m...$j5rJVu0lZUqluDh8ZdHA9q5mdstV0Xa1uOvNGBSJBmWWXK71vlVelTHIu0/.kdnOiCXCRL2zWf7qW2D8Vw2zm0
+!
+grpc
+ port 57400
+ address-family ipv4
+ service-layer
+ !
+!
+telemetry model-driven
+ destination-group jalapeno
+  address-family ipv4 10.0.254.1 port 32400
+   encoding self-describing-gpb
+   protocol grpc no-tls
+  !
+ !
+ sensor-group lldp
+  sensor-path openconfig-lldp:lldp/interfaces
+ !
+ sensor-group cisco_models
+  sensor-path Cisco-IOS-XR-pfi-im-cmd-oper:interfaces/interface-xr/interface
+  sensor-path Cisco-IOS-XR-fib-common-oper:mpls-forwarding/nodes/node/label-fib/forwarding-details/forwarding-detail
+ !
+ sensor-group openconfig_interfaces
+  sensor-path openconfig-interfaces:interfaces
+  sensor-path openconfig-interfaces:interfaces/interface
+ !
+ subscription base_metrics
+  sensor-group-id lldp sample-interval 300000
+  sensor-group-id cisco_models sample-interval 10000
+  sensor-group-id openconfig_interfaces sample-interval 10000
+  destination-id jalapeno
+ !
+!
+tpa
+ vrf default
+  address-family ipv4
+   default-route mgmt
+   update-source dataports Loopback0
+  !
+ !
+!
+snmp-server location 47.6062N 122.3321W
+call-home
+ service active
+ contact smart-licensing
+ profile CiscoTAC-1
+  active
+  destination transport-method http
+ !
+!
+netconf-yang agent
+ ssh
+!
+interface Loopback0
+ ipv4 address 10.0.0.6 255.255.255.255
+ ipv6 address 2001:1:1:f006::1/128
+!
+interface MgmtEth0/RP0/CPU0/0
+ description mgt  
+ ipv4 address 10.251.253.106 255.255.255.0
+!
+interface GigabitEthernet0/0/0/0
+ description to R07
+ ipv4 address 10.1.1.4 255.255.255.254
+ ipv6 address 2001:1:1:1::4/127
+ ipv6 address 2001:1:1:1::5/127
+!
+interface GigabitEthernet0/0/0/1
+ description to r02
+ ipv4 address 10.1.1.9 255.255.255.254
+ ipv6 address 2001:1:1:1::9/127
+!
+interface GigabitEthernet0/0/0/2
+ description to r71
+ ipv4 address 10.71.0.0 255.255.255.254
+ ipv6 address 10:71::/127
+!
+interface GigabitEthernet0/0/0/3
+ description to r72
+ ipv4 address 10.72.0.0 255.255.255.254
+ ipv6 address 10:72::/127
+!
+interface GigabitEthernet0/0/0/4
+ shutdown
+!
+interface GigabitEthernet0/0/0/5
+ shutdown
+!
+interface GigabitEthernet0/0/0/6
+ shutdown
+!
+interface GigabitEthernet0/0/0/7
+ description scapy
+!
+interface GigabitEthernet0/0/0/8
+ shutdown
+!
+interface GigabitEthernet0/0/0/9
+ shutdown
+!
+extcommunity-set opaque color600
+  600     
+end-set
+!
+extcommunity-set opaque color601
+  601
+end-set
+!
+extcommunity-set opaque color602
+  602
+end-set
+!
+route-policy SID($SID)
+  set label-index $SID
+end-policy
+!
+route-policy drop
+  drop
+end-policy
+!
+route-policy pass
+  pass
+end-policy
+!
+route-policy r06-srte
+  if destination in (10.71.2.0/24) then
+    set extcommunity color color600
+  endif
+  if destination in (10.71.3.0/24) then
+    set extcommunity color color601
+  endif
+  if destination in (10.71.4.0/23) then
+    set extcommunity color color602
+  endif
+  pass
+end-policy
+!
+router static
+ address-family ipv4 unicast
+  10.200.99.0/24 MgmtEth0/RP0/CPU0/0 10.251.253.1
+ !
+!
+router isis 100
+ is-type level-2-only
+ net 49.0901.0000.0000.0006.00
+ distribute link-state level 2
+ nsf ietf
+ flex-algo 128
+  priority 128
+ !
+ address-family ipv4 unicast
+  metric-style wide
+  advertise link attributes
+  mpls traffic-eng level-2-only
+  mpls traffic-eng router-id Loopback0
+  maximum-paths 32
+  segment-routing mpls
+ !
+ address-family ipv6 unicast
+  metric-style wide
+  advertise link attributes
+  maximum-paths 32
+  segment-routing srv6
+   locator MAIN
+   !
+  !
+ !
+ interface Loopback0
+  passive
+  address-family ipv4 unicast
+   prefix-sid index 6
+   prefix-sid algorithm 128 index 10006
+  !
+  address-family ipv6 unicast
+  !
+ !
+ interface GigabitEthernet0/0/0/0
+  circuit-type level-2-only
+  point-to-point
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+ !
+ interface GigabitEthernet0/0/0/1
+  circuit-type level-2-only
+  point-to-point
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+ !
+!
+router bgp 100000
+ bgp router-id 10.0.0.6
+ segment-routing srv6
+  locator MAIN
+ !
+ bgp bestpath as-path multipath-relax
+ address-family ipv4 unicast
+  additional-paths receive
+  maximum-paths ebgp 32
+  network 10.0.0.6/32 route-policy SID(6)
+  allocate-label all
+ !
+ address-family vpnv4 unicast
+ !
+ address-family ipv6 unicast
+  additional-paths receive
+  maximum-paths ebgp 32
+  network 2001:1:1:f006::1/128
+ !
+ address-family vpnv6 unicast
+ !
+ address-family link-state link-state
+ !
+ neighbor 10.0.0.10
+  remote-as 100000
+  update-source Loopback0
+  address-family ipv4 unicast
+   route-policy r06-srte out
+   next-hop-self
+  !
+  address-family ipv4 labeled-unicast
+   next-hop-self
+  !
+  address-family vpnv4 unicast
+   next-hop-self
+  !
+  address-family ipv6 unicast
+   next-hop-self
+  !
+  address-family vpnv6 unicast
+   next-hop-self
+  !
+  address-family link-state link-state
+   route-policy drop in
+   route-policy pass out
+  !
+ !
+ neighbor 10.71.0.1
+  remote-as 7100
+  egress-engineering
+  bmp-activate server 1
+  address-family ipv4 unicast
+   route-policy pass in
+   route-policy pass out
+  !
+  address-family ipv6 unicast
+   route-policy pass in
+   route-policy pass out
+  !
+ !
+ neighbor 10.72.0.1
+  remote-as 7200
+  egress-engineering
+  bmp-activate server 1
+  address-family ipv4 unicast
+   route-policy pass in
+   route-policy pass out
+  !
+  address-family ipv6 unicast
+   route-policy pass in
+   route-policy pass out
+  !
+ !        
+!
+bmp server 1
+ host 10.200.99.2 port 30511
+ description Jalapeno GoBMP
+ update-source MgmtEth0/RP0/CPU0/0
+ flapping-delay 60
+ initial-delay 5
+ stats-reporting-period 60
+ initial-refresh delay 30 spread 2
+!
+mpls oam
+!
+segment-routing
+ global-block 100000 163999
+ srv6
+  encapsulation
+   source-address 2001:1:1:f006::1
+  !
+  locators
+   locator MAIN
+    prefix 2001:1:1:f006::/64
+   !
+  !
+ !
+!
+netconf agent tty
+!
+lldp
+!
+ssh server rate-limit 600
+ssh server session-limit 100
+ssh server v2
+ssh server vrf default
+ssh server netconf vrf default
+end
+          
+RP/0/RP0/CPU0:R06#    exit
+Connection to 10.251.253.106 closed.
+brmcdoug@naja:~$ ssh cisco@10.251.253.107
+Password: 
+
+
+RP/0/RP0/CPU0:R07#sho run
+Thu Feb 27 16:56:36.777 UTC
+Building configuration...
+!! IOS XR Configuration 7.3.1.21I
+!! Last configuration change at Thu Feb 20 15:48:53 2020 by cisco
+!
+hostname R07
+username cisco
+ group root-lr
+ group cisco-support
+ secret 10 $6$v/FnZ1EoQtBLCZ1.$3lYiQnAxu3JY3kH.bAj3VR.tgMbLWFBOBCYmVVmWkohtbSQXMQyVZcY8xUyfv820HnB.xreu7aDL.FEW41D0x.
+!
+grpc
+ port 57400
+ no-tls
+ address-family ipv4
+ service-layer
+ !
+!
+telemetry model-driven
+ destination-group jalapeno
+  address-family ipv4 10.0.254.1 port 32400
+   encoding self-describing-gpb
+   protocol grpc no-tls
+  !
+ !
+ sensor-group cisco_models
+  sensor-path Cisco-IOS-XR-pfi-im-cmd-oper:interfaces/interface-xr/interface
+  sensor-path Cisco-IOS-XR-fib-common-oper:mpls-forwarding/nodes/node/label-fib/forwarding-details/forwarding-detail
+ !
+ sensor-group openconfig_interfaces
+  sensor-path openconfig-interfaces:interfaces
+  sensor-path openconfig-interfaces:interfaces/interface
+ !
+ subscription base_metrics
+  sensor-group-id cisco_models sample-interval 10000
+  sensor-group-id openconfig_interfaces sample-interval 10000
+  destination-id jalapeno
+ !
+!         
+vrf green
+ address-family ipv4 unicast
+  import route-target
+   200:200
+  !
+  export route-target
+   200:200
+  !
+ !
+!
+vrf orange
+ address-family ipv4 unicast
+  import route-target
+   100:100
+   101:101
+  !
+  export route-target
+   100:100
+   101:101
+  !
+ !
+ address-family ipv6 unicast
+  import route-target
+   100:100
+   101:101
+  !
+  export route-target
+   100:100
+   101:101
+  !
+ !
+!
+vrf add-path
+ address-family ipv4 unicast
+  import route-target
+   700:700
+  !
+  export route-target
+   700:700
+  !
+ !
+!
+tpa
+ vrf default
+  address-family ipv4
+   default-route mgmt
+   update-source dataports Loopback0
+  !
+ !
+!
+call-home
+ service active
+ contact smart-licensing
+ profile CiscoTAC-1
+  active
+  destination transport-method http
+ !
+!
+netconf-yang agent
+ ssh
+!
+interface Loopback0
+ ipv4 address 10.0.0.7 255.255.255.255
+ ipv6 address 2001:1:1:f007::1/128
+!
+interface Loopback100
+ vrf orange
+ ipv4 address 100.100.7.1 255.255.255.0
+!
+interface Loopback200
+ vrf green
+ ipv4 address 200.200.7.1 255.255.255.0
+!
+interface Loopback700
+ vrf add-path
+ ipv4 address 10.70.70.7 255.255.255.0
+!
+interface MgmtEth0/RP0/CPU0/0
+ description mgt  
+ ipv4 address 10.251.253.107 255.255.255.0
+!
+interface GigabitEthernet0/0/0/0
+ description to R06
+ ipv4 address 10.1.1.5 255.255.255.254
+ ipv6 address 2001:1:1:1::5/127
+ ipv6 address 2001:1:1:1::7/127
+!
+interface GigabitEthernet0/0/0/1
+ description no longer in use
+ ipv4 address 10.1.1.11 255.255.255.254
+ ipv6 address 2001:1:1:1::11/127
+ shutdown
+!
+interface GigabitEthernet0/0/0/2
+ description to r71
+ ipv4 address 10.71.1.0 255.255.255.254
+!
+interface GigabitEthernet0/0/0/3
+ description to r72
+ ipv4 address 10.72.1.0 255.255.255.254
+!
+interface GigabitEthernet0/0/0/4
+ vrf orange
+ ipv4 address 172.16.7.0 255.255.255.254
+!
+interface GigabitEthernet0/0/0/5
+ vrf green
+ ipv4 address 172.17.7.0 255.255.255.254
+!
+interface GigabitEthernet0/0/0/6
+ description to r13
+ ipv4 address 10.1.1.128 255.255.255.254
+ ipv6 address 2001:1:1:1::128/127
+!
+interface GigabitEthernet0/0/0/7
+ description scapy
+!
+interface GigabitEthernet0/0/0/8
+ description to R04
+ ipv4 address 10.1.1.64 255.255.255.254
+ ipv6 address 2001:1:1:1::64/127
+!
+interface GigabitEthernet0/0/0/9
+ shutdown
+!
+extcommunity-set opaque algo-128
+  1600
+end-set
+!
+extcommunity-set opaque green-long
+  1515
+end-set
+!
+extcommunity-set opaque green-short
+  1500
+end-set
+!
+route-policy SID($SID)
+  set label-index $SID
+end-policy
+!
+route-policy drop
+  drop
+end-policy
+!
+route-policy pass
+  pass
+end-policy
+!
+route-policy vrf-asbr
+  if community matches-every (1515:1515) then
+    set extcommunity color green-long
+  endif
+  if community matches-every (1515:0) then
+    set extcommunity color green-short
+  endif
+  if community matches-every (1600:1600) then
+    set extcommunity color algo-128
+  endif
+  pass
+end-policy
+!
+route-policy vrf-srte
+  if destination in (200.200.15.0/24) then
+    set label 80215
+  endif
+  if destination in (100.100.15.0/24) then
+    set label 80115
+  endif
+  pass
+end-policy
+!
+route-policy demo-srte
+  if destination in (10.0.0.13/32) then
+    set extcommunity color green-long
+  endif
+  if destination in (10.0.0.15/32) then
+    set extcommunity color green-short
+  endif
+  pass    
+end-policy
+!
+route-policy goog-srte
+  if destination in (10.0.0.13/32) then
+    set extcommunity color green-long
+  endif
+  pass
+end-policy
+!
+route-policy vrf-green
+  if community matches-every (1515:1515) then
+    set extcommunity color green-long
+  endif
+  pass
+end-policy
+!
+router static
+ address-family ipv4 unicast
+  10.1.1.129/32 GigabitEthernet0/0/0/6
+  10.200.99.0/24 MgmtEth0/RP0/CPU0/0 10.251.253.1
+ !
+!
+router isis 100
+ is-type level-2-only
+ net 49.0901.0000.0000.0007.00
+ distribute link-state level 2
+ nsf ietf
+ flex-algo 128
+  priority 128
+ !
+ address-family ipv4 unicast
+  metric-style wide
+  advertise link attributes
+  mpls traffic-eng level-2-only
+  mpls traffic-eng router-id Loopback0
+  maximum-paths 32
+  segment-routing mpls
+ !
+ address-family ipv6 unicast
+  metric-style wide
+  advertise link attributes
+  maximum-paths 32
+  segment-routing srv6
+   locator MAIN
+   !
+  !
+ !
+ interface Loopback0
+  passive
+  address-family ipv4 unicast
+   prefix-sid index 7
+   prefix-sid algorithm 128 absolute 110007
+  !
+  address-family ipv6 unicast
+  !
+ !
+ interface GigabitEthernet0/0/0/0
+  circuit-type level-2-only
+  point-to-point
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+ !        
+ interface GigabitEthernet0/0/0/1
+  circuit-type level-2-only
+  point-to-point
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+ !
+ interface GigabitEthernet0/0/0/8
+  circuit-type level-2-only
+  point-to-point
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+ !
+!
+router bgp 100000
+ bgp router-id 10.0.0.7
+ segment-routing srv6
+  locator MAIN
+ !
+ bgp bestpath as-path multipath-relax
+ address-family ipv4 unicast
+  additional-paths receive
+  maximum-paths ebgp 32
+  network 10.0.0.7/32 route-policy SID(7)
+  allocate-label all
+ !
+ address-family vpnv4 unicast
+  retain route-target all
+ !
+ address-family ipv6 unicast
+  additional-paths receive
+  maximum-paths ebgp 32
+  network 2001:1:1:f007::1/128
+ !
+ address-family vpnv6 unicast
+ !
+ address-family link-state link-state
+ !
+ neighbor 10.0.0.10
+  remote-as 100000
+  update-source Loopback0
+  address-family ipv4 unicast
+   route-policy demo-srte out
+   next-hop-self
+  !
+  address-family ipv4 labeled-unicast
+   next-hop-self
+  !
+  address-family vpnv4 unicast
+   route-policy pass in
+   route-policy vrf-asbr out
+   next-hop-self
+  !       
+  address-family ipv6 unicast
+   next-hop-self
+  !
+  address-family vpnv6 unicast
+   next-hop-self
+  !
+  address-family link-state link-state
+   route-policy drop in
+   route-policy pass out
+  !
+ !
+ neighbor 10.71.1.1
+  remote-as 7100
+  egress-engineering
+  bmp-activate server 1
+  address-family ipv4 unicast
+   route-policy pass in
+   route-policy pass out
+  !
+  address-family ipv6 unicast
+   route-policy pass in
+   route-policy pass out
+  !
+ !
+ neighbor 10.72.1.1
+  remote-as 7200
+  egress-engineering
+  bmp-activate server 1
+  address-family ipv4 unicast
+   route-policy pass in
+   route-policy pass out
+  !
+  address-family ipv6 unicast
+   route-policy pass in
+   route-policy pass out
+  !       
+ !
+ neighbor 10.1.1.129
+  remote-as 65001
+  bmp-activate server 1
+  address-family ipv4 unicast
+   route-policy pass in
+   route-policy pass out
+  !
+  address-family ipv4 labeled-unicast
+   route-policy pass in
+   route-policy pass out
+  !
+  address-family vpnv4 unicast
+   route-policy pass in
+   route-policy pass out
+  !
+  address-family ipv6 unicast
+   route-policy pass in
+   route-policy pass out
+  !
+  address-family vpnv6 unicast
+   route-policy pass in
+   route-policy pass out
+  !
+ !
+ vrf green
+  rd auto
+  address-family ipv4 unicast
+   redistribute connected
+  !
+ !
+ vrf orange
+  rd auto
+  address-family ipv4 unicast
+   redistribute connected
+  !       
+ !
+ vrf add-path
+  rd 700:700
+  address-family ipv4 unicast
+   redistribute connected
+  !
+ !
+!
+bmp server 1
+ host 10.200.99.2 port 30511
+ description voltron GoBMP  
+ update-source MgmtEth0/RP0/CPU0/0
+ flapping-delay 60
+ initial-delay 5
+ stats-reporting-period 60
+ initial-refresh delay 30 spread 2
+!
+mpls oam
+!
+segment-routing
+ global-block 100000 163999
+ srv6
+  encapsulation
+   source-address 2001:1:1:f007::1
+  !
+  locators
+   locator MAIN
+    prefix 2001:1:1:f007::/64
+   !
+  !
+ !
+!
+netconf agent tty
+!
+ssh server rate-limit 600
+ssh server session-limit 100
+ssh server v2
+ssh server vrf default
+ssh server netconf vrf default
+performance-measurement
+ interface GigabitEthernet0/0/0/1
+  delay-measurement
+   advertise-delay 100
+  !
+ !
+!
+end
+
+RP/0/RP0/CPU0:R07# exit
+Connection to 10.251.253.107 closed.
+brmcdoug@naja:~$ ssh cisco@10.251.253.108
+Password: 
+
+
+RP/0/RP0/CPU0:R08#sho run
+Thu Feb 27 16:56:34.780 UTC
+Building configuration...
+!! IOS XR Configuration 7.3.1.21I
+!! Last configuration change at Thu Feb 27 16:32:59 2020 by cisco
+!
+hostname R08
+username cisco
+ group root-lr
+ group cisco-support
+ secret 10 $6$SCZhq/HNfRqO5q/.$0taA35HcTbW30l4m9/5IMCx9RDPM4tm4olF9cL975u.QBZRHMh9QHNPlpyxPwbXVzCx6qpyjExPUVyuZfCvjp1
+!
+grpc
+ port 57400
+ no-tls
+ address-family ipv4
+ service-layer
+ !
+!
+telemetry model-driven
+ destination-group jalapeno
+  address-family ipv4 10.0.254.1 port 32400
+   encoding self-describing-gpb
+   protocol grpc no-tls
+  !
+ !
+ sensor-group cisco_models
+  sensor-path Cisco-IOS-XR-pfi-im-cmd-oper:interfaces/interface-xr/interface
+  sensor-path Cisco-IOS-XR-fib-common-oper:mpls-forwarding/nodes/node/label-fib/forwarding-details/forwarding-detail
+ !
+ sensor-group openconfig_interfaces
+  sensor-path openconfig-interfaces:interfaces
+  sensor-path openconfig-interfaces:interfaces/interface
+ !
+ subscription base_metrics
+  sensor-group-id cisco_models sample-interval 10000
+  sensor-group-id openconfig_interfaces sample-interval 10000
+  destination-id jalapeno
+ !
+!         
+vrf beta
+ address-family ipv4 unicast
+  import route-target
+   211:211
+  !
+  export route-target
+   211:211
+   311:311
+  !
+ !
+!
+vrf alpha
+ address-family ipv4 unicast
+  import route-target
+   210:210
+   310:310
+  !
+  export route-target
+   210:210
+   310:310
+  !
+ !
+!
+tpa
+ vrf default
+  address-family ipv4
+   default-route mgmt
+   update-source dataports Loopback0
+  !
+ !
+!
+call-home
+ service active
+ contact smart-licensing
+ profile CiscoTAC-1
+  active  
+  destination transport-method http
+ !
+!
+netconf-yang agent
+ ssh
+!
+interface Loopback0
+ ipv4 address 10.0.0.8 255.255.255.255
+ ipv6 address 2001:1:1:f008::1/128
+!
+interface Loopback210
+ vrf alpha
+ ipv4 address 210.210.8.1 255.255.255.0
+!
+interface Loopback211
+ vrf beta
+ ipv4 address 211.211.8.1 255.255.255.0
+!
+interface MgmtEth0/RP0/CPU0/0
+ description mgt  
+ ipv4 address 10.251.253.108 255.255.255.0
+!
+interface GigabitEthernet0/0/0/0
+ description r02 no longer in use
+ ipv4 address 10.1.1.15 255.255.255.254
+ ipv6 address 2001:1:1:1::15/127
+ shutdown
+!
+interface GigabitEthernet0/0/0/1
+ description to r01
+ ipv4 address 10.1.1.13 255.255.255.254
+ ipv6 address 2001:1:1:1::13/127
+!
+interface GigabitEthernet0/0/0/2
+ description to r09
+ ipv4 address 10.1.1.26 255.255.255.254
+ ipv6 address 2001:1:1:1::26/127
+!
+interface GigabitEthernet0/0/0/3
+ description vrf alpha
+ vrf orange
+ ipv4 address 210.210.80.0 255.255.255.254
+!
+interface GigabitEthernet0/0/0/4
+ shutdown
+!
+interface GigabitEthernet0/0/0/5
+ shutdown
+!
+interface GigabitEthernet0/0/0/6
+ shutdown
+!
+interface GigabitEthernet0/0/0/7
+ description scapy
+!
+interface GigabitEthernet0/0/0/8
+ shutdown
+!
+interface GigabitEthernet0/0/0/9
+ shutdown
+!
+route-policy SID($SID)
+  set label-index $SID
+end-policy
+!
+route-policy drop
+  drop
+end-policy
+!
+route-policy pass
+  pass
+end-policy
+!
+router isis 100
+ is-type level-2-only
+ net 49.0901.0000.0000.0008.00
+ distribute link-state level 2
+ nsf ietf
+ flex-algo 128
+  priority 128
+ !
+ address-family ipv4 unicast
+  metric-style wide
+  advertise link attributes
+  mpls traffic-eng level-2-only
+  mpls traffic-eng router-id Loopback0
+  maximum-paths 32
+  segment-routing mpls
+ !
+ address-family ipv6 unicast
+  metric-style wide
+  advertise link attributes
+  maximum-paths 32
+  segment-routing srv6
+   locator MAIN
+   !
+  !
+ !
+ interface Loopback0
+  passive
+  address-family ipv4 unicast
+   prefix-sid index 8
+   prefix-sid algorithm 128 index 10008
+  !
+  address-family ipv6 unicast
+  !
+ !
+ interface GigabitEthernet0/0/0/0
+  circuit-type level-2-only
+  point-to-point
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+ !
+ interface GigabitEthernet0/0/0/1
+  circuit-type level-2-only
+  point-to-point
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+ !
+ interface GigabitEthernet0/0/0/2
+  circuit-type level-2-only
+  point-to-point
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+ !
+!
+router bgp 100000
+ bgp router-id 10.0.0.8
+ segment-routing srv6
+  locator MAIN
+ !
+ bgp bestpath as-path multipath-relax
+ address-family ipv4 unicast
+  additional-paths receive
+  maximum-paths ebgp 32
+  network 10.0.0.8/32 route-policy SID(8)
+  allocate-label all
+ !
+ address-family vpnv4 unicast
+  retain route-target all
+ !
+ address-family ipv6 unicast
+  additional-paths receive
+  maximum-paths ebgp 32
+  network 2001:1:1:f008::1/128
+ !
+ address-family vpnv6 unicast
+ !
+ neighbor 2001:1:1:f010::1
+  remote-as 100000
+  description iBGP to r10 
+  update-source Loopback0
+  address-family ipv4 unicast
+   next-hop-self
+  !
+  address-family vpnv4 unicast
+   next-hop-self
+  !
+  address-family ipv6 unicast
+   next-hop-self
+  !
+  address-family vpnv6 unicast
+   next-hop-self
+  !
+ !
+ vrf beta
+  rd auto
+  address-family ipv4 unicast
+   segment-routing srv6
+    locator MAIN
+    alloc mode per-vrf
+   !
+   redistribute connected
+  !
+ !
+ vrf alpha
+  rd auto
+  address-family ipv4 unicast
+   segment-routing srv6
+    locator MAIN
+    alloc mode per-vrf
+   !
+   redistribute connected
+  !
+ !
+!         
+bmp server 1
+ host 10.0.254.1 port 30511
+ description voltron GoBMP  
+ update-source Loopback0
+ flapping-delay 60
+ initial-delay 5
+ stats-reporting-period 60
+ initial-refresh delay 30 spread 2
+!
+mpls oam
+!
+segment-routing
+ global-block 100000 163999
+ srv6
+  encapsulation
+   source-address 2001:1:1:f008::1
+  !
+  locators
+   locator MAIN
+    prefix 2001:1:1:f008::/64
+   !
+  !
+ !
+!
+netconf agent tty
+!
+ssh server rate-limit 600
+ssh server session-limit 100
+ssh server v2
+ssh server vrf default
+ssh server netconf vrf default
+performance-measurement
+ interface GigabitEthernet0/0/0/0
+  delay-measurement
+   advertise-delay 100
+  !       
+ !
+ interface GigabitEthernet0/0/0/1
+  delay-measurement
+   advertise-delay 100
+  !
+ !
+!
+end
+
+RP/0/RP0/CPU0:R08# exit
+Connection to 10.251.253.108 closed.
+brmcdoug@naja:~$ ssh cisco@10.251.253.109
+Password: 
+
+
+RP/0/RP0/CPU0:R09#sho run
+Thu Feb 27 13:38:33.921 UTC
+Building configuration...
+!! IOS XR Configuration 7.3.1.21I
+!! Last configuration change at Thu Feb 27 13:15:17 2020 by cisco
+!
+hostname R09
+username cisco
+ group root-lr
+ group cisco-support
+ secret 10 $6$9v740/SWVEM620/.$vWl0oRF5HlK5bWIJ65vUaHhplqGB99i4XMLbB9fPmulVKZ3BRmRxR/FFfenYUt7cNAK17YEswMWKRdrGyK1Mp1
+!
+grpc
+ port 57400
+ no-tls
+ address-family ipv4
+ service-layer
+ !
+!
+telemetry model-driven
+ destination-group jalapeno
+  address-family ipv4 10.0.254.1 port 32400
+   encoding self-describing-gpb
+   protocol grpc no-tls
+  !
+ !
+ sensor-group cisco_models
+  sensor-path Cisco-IOS-XR-pfi-im-cmd-oper:interfaces/interface-xr/interface
+  sensor-path Cisco-IOS-XR-fib-common-oper:mpls-forwarding/nodes/node/label-fib/forwarding-details/forwarding-detail
+ !
+ sensor-group openconfig_interfaces
+  sensor-path openconfig-interfaces:interfaces
+  sensor-path openconfig-interfaces:interfaces/interface
+ !
+ subscription base_metrics
+  sensor-group-id cisco_models sample-interval 10000
+  sensor-group-id openconfig_interfaces sample-interval 10000
+  destination-id jalapeno
+ !
+!         
+vrf green
+ address-family ipv4 unicast
+  import route-target
+   200:200
+  !
+  export route-target
+   200:200
+  !
+ !
+!
+vrf orange
+ address-family ipv4 unicast
+  import route-target
+   100:100
+   101:101
+  !
+  export route-target
+   100:100
+   101:101
+  !
+ !
+ address-family ipv6 unicast
+  import route-target
+   100:100
+   101:101
+  !
+  export route-target
+   100:100
+   101:101
+  !
+ !
+!
+vrf add-path
+ address-family ipv4 unicast
+  import route-target
+   700:700
+  !
+  export route-target
+   700:700
+  !
+ !
+!
+tpa
+ vrf default
+  address-family ipv4
+   default-route mgmt
+   update-source dataports Loopback0
+  !
+ !
+!
+call-home
+ service active
+ contact smart-licensing
+ profile CiscoTAC-1
+  active
+  destination transport-method http
+ !
+!
+netconf-yang agent
+ ssh
+!
+interface Loopback0
+ ipv4 address 10.0.0.9 255.255.255.255
+ ipv6 address 2001:1:1:f009::1/128
+!
+interface Loopback200
+ vrf green
+ ipv4 address 200.200.9.1 255.255.255.0
+!
+interface MgmtEth0/RP0/CPU0/0
+ description mgt  
+ ipv4 address 10.251.253.109 255.255.255.0
+!
+interface GigabitEthernet0/0/0/0
+ description to r08 
+ ipv4 address 10.1.1.27 255.255.255.254
+ ipv6 address 2001:1:1:1::27/127
+!
+interface GigabitEthernet0/0/0/1
+ description to R20
+ mtu 1460
+ ipv4 address 10.1.1.6 255.255.255.254
+ ipv6 address 2001:1:1:1::6/127
+!
+interface GigabitEthernet0/0/0/2
+ description to vrf green
+ vrf green
+ ipv4 address 172.16.9.0 255.255.255.254
+!
+interface GigabitEthernet0/0/0/3
+ description to R23
+ mtu 1460
+ ipv4 address 10.1.1.10 255.255.255.254
+ ipv6 address 2001:1:1:1::10/127
+!
+interface GigabitEthernet0/0/0/4
+ shutdown
+!
+interface GigabitEthernet0/0/0/5
+ shutdown
+!
+interface GigabitEthernet0/0/0/6
+ shutdown
+!
+interface GigabitEthernet0/0/0/7
+ description scapy
+!
+interface GigabitEthernet0/0/0/8
+ shutdown
+!
+interface GigabitEthernet0/0/0/9
+ shutdown
+!
+route-policy SID($SID)
+  set label-index $SID
+end-policy
+!
+route-policy drop
+  drop
+end-policy
+!
+route-policy pass
+  pass
+end-policy
+!
+route-policy test
+  set path-selection multipath advertise
+end-policy
+!
+router isis 100
+ is-type level-2-only
+ net 49.0901.0000.0000.0009.00
+ distribute link-state level 2
+ nsf ietf
+ address-family ipv4 unicast
+  metric-style wide
+  mpls traffic-eng level-2-only
+  mpls traffic-eng router-id Loopback0
+  maximum-paths 32
+  segment-routing mpls
+ !
+ address-family ipv6 unicast
+  metric-style wide
+  advertise link attributes
+  maximum-paths 32
+  segment-routing srv6
+   locator MAIN
+   !
+  !
+ !
+ interface Loopback0
+  passive
+  address-family ipv4 unicast
+   prefix-sid index 9
+   prefix-sid algorithm 129 index 20009
+  !
+  address-family ipv6 unicast
+  !
+ !
+ interface GigabitEthernet0/0/0/0
+  circuit-type level-2-only
+  point-to-point
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+ !
+ interface GigabitEthernet0/0/0/1
+  circuit-type level-2-only
+  point-to-point
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+ !
+ interface GigabitEthernet0/0/0/3
+  circuit-type level-2-only
+  point-to-point
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+ !
+!
+router bgp 100000
+ bgp router-id 10.0.0.9
+ segment-routing srv6
+  locator MAIN
+ !
+ bgp bestpath as-path multipath-relax
+ address-family ipv4 unicast
+  additional-paths receive
+  maximum-paths ebgp 32
+  network 10.0.0.9/32 route-policy SID(9)
+  allocate-label all
+ !
+ address-family vpnv4 unicast
+  additional-paths receive
+  retain route-target all
+ !
+ address-family ipv6 unicast
+  additional-paths receive
+  maximum-paths ebgp 32
+  network 2001:1:1:f009::1/128
+ !
+ address-family vpnv6 unicast
+ !
+ neighbor 10.0.0.10
+  remote-as 100000
+  description iBGP to r10 
+  update-source Loopback0
+  address-family ipv4 unicast
+   next-hop-self
+  !
+  address-family ipv4 labeled-unicast
+   next-hop-self
+  !
+  address-family vpnv4 unicast
+   next-hop-self
+  !
+  address-family ipv6 unicast
+   next-hop-self
+  !
+  address-family vpnv6 unicast
+   next-hop-self
+  !
+ !
+ vrf green
+  rd auto
+  address-family ipv4 unicast
+   redistribute connected
+  !
+ !
+ vrf orange
+  rd auto
+  address-family ipv4 unicast
+   maximum-paths ibgp 4 unequal-cost
+   redistribute connected
+  !
+ !
+ vrf add-path
+  rd 700:700
+  address-family ipv4 unicast
+   maximum-paths ibgp 4 unequal-cost
+  !
+ !
+!
+bmp server 1
+ host 10.0.254.1 port 30511
+ description voltron GoBMP  
+ update-source Loopback0
+ flapping-delay 60
+ initial-delay 5
+ stats-reporting-period 60
+ initial-refresh delay 30 spread 2
+!
+mpls oam
+!
+segment-routing
+ global-block 100000 163999
+ srv6
+  encapsulation
+   source-address 2001:1:1:f009::1
+  !       
+  locators
+   locator MAIN
+    prefix 2001:1:1:f009::/64
+   !
+  !
+ !
+!
+netconf agent tty
+!
+ssh server rate-limit 600
+ssh server session-limit 100
+ssh server v2
+ssh server vrf default
+ssh server netconf vrf default
+end
+
+RP/0/RP0/CPU0:R09# exit
+Connection to 10.251.253.109 closed.
+brmcdoug@naja:~$ ssh cisco@10.251.253.110
+Password: 
+
+
+RP/0/RP0/CPU0:R10#sho run
+Thu Feb 27 13:30:18.593 UTC
+Building configuration...
+!! IOS XR Configuration 7.3.1.21I
+!! Last configuration change at Thu Feb 20 12:17:47 2020 by cisco
+!
+hostname R10
+username cisco
+ group root-lr
+ group cisco-support
+ secret 10 $6$DzhBV/TPHMq24V/.$uy6UYAETM4WG3VAkWCnhhWaiUfC7DIVT78Ote6vn3x5l7HA1aSfiH/Q85jWgyo1w0COM8NfO68lGLP972Dxel0
+!
+grpc
+ port 57400
+ no-tls
+ address-family ipv4
+ service-layer
+ !
+!
+telemetry model-driven
+ destination-group jalapeno
+  address-family ipv4 10.0.254.1 port 32400
+   encoding self-describing-gpb
+   protocol grpc no-tls
+  !
+ !
+ sensor-group cisco_models
+  sensor-path Cisco-IOS-XR-pfi-im-cmd-oper:interfaces/interface-xr/interface
+  sensor-path Cisco-IOS-XR-fib-common-oper:mpls-forwarding/nodes/node/label-fib/forwarding-details/forwarding-detail
+ !
+ sensor-group openconfig_interfaces
+  sensor-path openconfig-interfaces:interfaces
+  sensor-path openconfig-interfaces:interfaces/interface
+ !
+ subscription base_metrics
+  sensor-group-id cisco_models sample-interval 10000
+  sensor-group-id openconfig_interfaces sample-interval 10000
+  destination-id jalapeno
+ !
+!         
+tpa
+ vrf default
+  address-family ipv4
+   default-route mgmt
+   update-source dataports Loopback0
+  !
+ !
+!
+call-home
+ service active
+ contact smart-licensing
+ profile CiscoTAC-1
+  active
+  destination transport-method http
+ !
+!
+netconf-yang agent
+ ssh
+!
+interface Loopback0
+ ipv4 address 10.0.0.10 255.255.255.255
+ ipv6 address 2001:1:1:f010::1/128
+!
+interface MgmtEth0/RP0/CPU0/0
+ description mgt  
+ ipv4 address 10.251.253.110 255.255.255.0
+!
+interface GigabitEthernet0/0/0/0
+ description to r01 
+ ipv4 address 10.1.1.29 255.255.255.254
+ ipv6 address 2001:1:1:1::29/127
+!
+interface GigabitEthernet0/0/0/1
+ shutdown
+!
+interface GigabitEthernet0/0/0/2
+ shutdown
+!
+interface GigabitEthernet0/0/0/3
+ shutdown
+!
+interface GigabitEthernet0/0/0/4
+ shutdown
+!
+interface GigabitEthernet0/0/0/5
+ shutdown
+!
+interface GigabitEthernet0/0/0/6
+ shutdown
+!
+interface GigabitEthernet0/0/0/7
+ shutdown
+!
+interface GigabitEthernet0/0/0/8
+ shutdown
+!
+interface GigabitEthernet0/0/0/9
+ shutdown
+!
+route-policy SID($SID)
+  set label-index $SID
+end-policy
+!
+route-policy drop
+  drop
+end-policy
+!
+route-policy pass
+  pass
+end-policy
+!
+route-policy l3vpn-add-path
+  set path-selection all advertise
+end-policy
+!
+router static
+ address-family ipv4 unicast
+  10.200.99.0/24 MgmtEth0/RP0/CPU0/0 10.251.253.1
+ !
+!
+router isis 100
+ is-type level-2-only
+ net 49.0901.0000.0000.0010.00
+ distribute link-state level 2
+ nsf ietf
+ address-family ipv4 unicast
+  metric-style wide
+  advertise link attributes
+  mpls traffic-eng level-2-only
+  mpls traffic-eng router-id Loopback0
+  maximum-paths 32
+  segment-routing mpls
+ !
+ address-family ipv6 unicast
+  metric-style wide
+  advertise link attributes
+  maximum-paths 32
+  segment-routing srv6
+   locator MAIN
+   !
+  !
+ !
+ interface Loopback0
+  passive
+  address-family ipv4 unicast
+   prefix-sid index 10
+   prefix-sid algorithm 128 index 10010
+  !       
+  address-family ipv6 unicast
+  !
+ !
+ interface GigabitEthernet0/0/0/0
+  circuit-type level-2-only
+  point-to-point
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+ !
+!
+router bgp 100000
+ bgp router-id 10.0.0.10
+ segment-routing srv6
+  locator MAIN
+ !
+ bgp bestpath as-path multipath-relax
+ address-family ipv4 unicast
+  additional-paths receive
+  maximum-paths ebgp 32
+  network 10.0.0.10/32 route-policy SID(10)
+  allocate-label all
+ !
+ address-family vpnv4 unicast
+  additional-paths receive
+  additional-paths send
+  additional-paths selection route-policy l3vpn-add-path
+ !
+ address-family ipv6 unicast
+  additional-paths receive
+  maximum-paths ebgp 32
+  network 2001:1:1:f010::1/128
+ !
+ address-family vpnv6 unicast
+ !
+ address-family link-state link-state
+ !
+ address-family ipv4 sr-policy
+ !
+ neighbor-group v4-clients
+  remote-as 100000
+  update-source Loopback0
+  address-family ipv4 unicast
+   route-reflector-client
+  !
+  address-family ipv4 labeled-unicast
+   route-reflector-client
+  !
+  address-family vpnv4 unicast
+   route-reflector-client
+  !
+  address-family vpnv6 unicast
+   route-reflector-client
+  !
+  address-family ipv4 sr-policy
+  !
+ !
+ neighbor-group v6-clients
+  remote-as 100000
+  bmp-activate server 1
+  update-source Loopback0
+  address-family vpnv4 unicast
+   route-reflector-client
+  !
+  address-family ipv6 unicast
+   route-reflector-client
+  !
+  address-family vpnv6 unicast
+   route-reflector-client
+  !
+ !
+ neighbor 10.0.0.0
+  use neighbor-group v4-clients
+  address-family link-state link-state
+   route-policy pass in
+   route-policy drop out
+  !
+ !
+ neighbor 10.0.0.1
+  use neighbor-group v4-clients
+  address-family link-state link-state
+   route-policy pass in
+   route-policy drop out
+  !
+ !
+ neighbor 10.0.0.2
+  use neighbor-group v4-clients
+ !
+ neighbor 10.0.0.5
+  use neighbor-group v4-clients
+ !
+ neighbor 10.0.0.6
+  use neighbor-group v4-clients
+  bmp-activate server 1
+  address-family link-state link-state
+   route-policy pass in
+   route-policy drop out
+  !
+ !        
+ neighbor 10.0.0.7
+  use neighbor-group v4-clients
+  bmp-activate server 1
+  address-family link-state link-state
+   route-policy pass in
+   route-policy drop out
+  !
+ !
+ neighbor 10.0.0.9
+  use neighbor-group v4-clients
+ !
+ neighbor 10.0.0.18
+  use neighbor-group v4-clients
+ !
+ neighbor 10.0.0.21
+  use neighbor-group v4-clients
+ !
+ neighbor 10.0.0.22
+  use neighbor-group v4-clients
+ !
+ neighbor 10.0.0.23
+  use neighbor-group v4-clients
+ !
+ neighbor 10.0.0.24
+  use neighbor-group v4-clients
+ !
+ neighbor 10.0.0.70
+  use neighbor-group v4-clients
+ !
+ neighbor 2001:1:1:f003::1
+  use neighbor-group v6-clients
+ !
+ neighbor 2001:1:1:f004::1
+  use neighbor-group v6-clients
+ !
+ neighbor 2001:1:1:f008::1
+  use neighbor-group v6-clients
+ !
+!
+bmp server 1
+ host 10.200.99.2 port 30511
+ description Jalapeno GoBMP
+ update-source MgmtEth0/RP0/CPU0/0
+ flapping-delay 60
+ initial-delay 5
+ stats-reporting-period 60
+ initial-refresh delay 30 spread 2
+!
+mpls oam
+!
+segment-routing
+ global-block 100000 163999
+ srv6
+  encapsulation
+   source-address 2001:1:1:f010::1
+  !
+  locators
+   locator MAIN
+    prefix 2001:1:1:f010::/64
+   !
+  !
+ !
+!
+netconf agent tty
+!
+ssh server rate-limit 600
+ssh server session-limit 100
+ssh server v2
+ssh server vrf default
+ssh server netconf vrf default
+end
+          
+RP/0/RP0/CPU0:R10# exit
+Connection to 10.251.253.110 closed.
+brmcdoug@naja:~$ ssh cisco@10.251.253.116
+Password: 
+
+
+RP/0/RP0/CPU0:R16#sho run
+Tue Jan 26 04:38:48.775 UTC
+Building configuration...
+!! IOS XR Configuration 7.3.1
+!! Last configuration change at Tue Jan 26 04:15:55 2021 by cisco
+!
+hostname R16
+username cisco
+ group root-lr
+ group cisco-support
+ secret 10 $6$GXFSDMYr1txD....$09ETAo1VMaFVXEu9HMDuV9y8fpXbZIHhgWe8nqvxotAaOOaTCxsC8QBzp3g1aVHFZUOtPuLFeLOaL.XsIpQHw.
+!
+grpc
+ port 57400
+ no-tls
+ address-family ipv4
+ service-layer
+ !
+!
+telemetry model-driven
+ destination-group jalapeno
+  address-family ipv4 10.251.251.1 port 32400
+   encoding self-describing-gpb
+   protocol grpc no-tls
+  !
+ !
+ sensor-group cisco_models
+  sensor-path Cisco-IOS-XR-pfi-im-cmd-oper:interfaces/interface-xr/interface
+  sensor-path Cisco-IOS-XR-fib-common-oper:mpls-forwarding/nodes/node/label-fib/forwarding-details/forwarding-detail
+ !
+ sensor-group openconfig_interfaces
+  sensor-path openconfig-interfaces:interfaces
+ !
+ subscription base_metrics
+  sensor-group-id cisco_models sample-interval 10000
+  sensor-group-id openconfig_interfaces sample-interval 10000
+  destination-id jalapeno
+ !
+!
+tpa       
+ vrf default
+  address-family ipv4
+   default-route mgmt
+   update-source dataports Loopback0
+  !
+ !
+!
+call-home
+ service active
+ contact smart-licensing
+ profile CiscoTAC-1
+  active
+  destination transport-method http
+ !
+!
+netconf-yang agent
+ ssh
+!
+interface Loopback0
+ ipv4 address 10.0.0.16 255.255.255.255
+ ipv6 address 2001:1:1:f016::1/128
+!
+interface MgmtEth0/RP0/CPU0/0
+ description mgt  
+ ipv4 address 10.251.253.116 255.255.255.0
+!
+interface GigabitEthernet0/0/0/0
+ description to R05
+ ipv4 address 10.1.1.43 255.255.255.254
+ ipv6 address 2001:1:1:1::43/127
+!
+interface GigabitEthernet0/0/0/1
+ description to R17 gojira
+ mtu 1460
+ ipv4 address 10.1.1.44 255.255.255.254
+ ipv6 address 2001:1:1:1::44/127
+!
+interface GigabitEthernet0/0/0/2
+ description to R21 gojira
+ mtu 1460
+ ipv4 address 10.1.1.36 255.255.255.254
+ ipv6 address 2001:1:1:1::36/127
+!
+interface GigabitEthernet0/0/0/3
+ shutdown
+!
+interface GigabitEthernet0/0/0/4
+ ipv4 address 10.1.1.81 255.255.255.254
+!
+interface GigabitEthernet0/0/0/5
+ shutdown
+!
+interface GigabitEthernet0/0/0/6
+ shutdown
+!
+interface GigabitEthernet0/0/0/7
+ description scapy
+ shutdown
+!
+interface GigabitEthernet0/0/0/8
+ shutdown
+!
+interface GigabitEthernet0/0/0/9
+ shutdown
+!
+route-policy SID($SID)
+  set label-index $SID
+end-policy
+!
+route-policy drop
+  drop
+end-policy
+!
+route-policy pass
+  pass
+end-policy
+!
+router isis 100
+ is-type level-2-only
+ net 49.0901.0000.0000.0016.00
+ distribute link-state level 2
+ nsf ietf
+ address-family ipv4 unicast
+  metric-style wide
+  mpls traffic-eng level-2-only
+  mpls traffic-eng router-id Loopback0
+  maximum-paths 32
+  segment-routing mpls
+ !
+ address-family ipv6 unicast
+  metric-style wide
+  advertise link attributes
+  maximum-paths 32
+  segment-routing srv6
+   locator MAIN
+   !
+  !
+ !
+ interface Loopback0
+  passive
+  address-family ipv4 unicast
+   prefix-sid index 16
+  !
+  address-family ipv6 unicast
+  !
+ !
+ interface GigabitEthernet0/0/0/0
+  circuit-type level-2-only
+  point-to-point
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+ !
+ interface GigabitEthernet0/0/0/1
+  circuit-type level-2-only
+  point-to-point
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+ !
+ interface GigabitEthernet0/0/0/2
+  circuit-type level-2-only
+  point-to-point
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+ !
+!
+router bgp 100000
+ bgp router-id 10.0.0.16
+ segment-routing srv6
+  locator MAIN
+ !
+ bgp bestpath as-path multipath-relax
+ address-family ipv4 unicast
+  additional-paths receive
+  maximum-paths ebgp 32
+  network 10.0.0.16/32 route-policy SID(16)
+  allocate-label all
+ !
+ address-family vpnv4 unicast
+  retain route-target all
+ !
+ address-family ipv6 unicast
+  additional-paths receive
+  maximum-paths ebgp 32
+  network 2001:1:1:f016::1/128
+ !
+ address-family vpnv6 unicast
+ !
+ neighbor 10.0.0.10
+  remote-as 100000
+  description iBGP to r10 
+  update-source Loopback0
+  address-family ipv4 unicast
+   next-hop-self
+  !
+  address-family ipv4 labeled-unicast
+   next-hop-self
+  !
+  address-family vpnv4 unicast
+   next-hop-self
+  !
+  address-family ipv6 unicast
+   next-hop-self
+  !
+  address-family vpnv6 unicast
+   next-hop-self
+  !
+ !
+!
+bmp server 1
+ host 10.200.99.7 port 30511
+ description jalapeno GoBMP  
+ update-source Loopback0
+ flapping-delay 60
+ initial-delay 5
+ stats-reporting-period 60
+ initial-refresh delay 30 spread 2
+!
+mpls oam
+!
+segment-routing
+ global-block 100000 163999
+ srv6
+  encapsulation
+   source-address 2001:1:1:f016::1
+  !
+  locators
+   locator MAIN
+   !
+  !
+ !
+!
+netconf agent tty
+!
+ssh server rate-limit 600
+ssh server session-limit 100
+ssh server v2
+ssh server vrf default
+ssh server netconf vrf default
+end
+
+RP/0/RP0/CPU0:R16#exit
+Connection to 10.251.253.116 closed.
+brmcdoug@naja:~$ exit
+logout
+Connection to 10.200.99.3 closed.
+BRMCDOUG-M-C5JU:~ brucemcdougall$ ssh brmcdoug@10.200.99.2
+brmcdoug@10.200.99.2's password: 
+Permission denied, please try again.
+brmcdoug@10.200.99.2's password: 
+Welcome to Ubuntu 18.04.2 LTS (GNU/Linux 4.15.0-50-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+  System information as of Tue May 25 10:51:52 PDT 2021
+
+  System load:             25.97
+  Usage of /home:          3.2% of 915.70GB
+  Memory usage:            11%
+  Swap usage:              0%
+  Processes:               613
+  Users logged in:         0
+  IP address for enp1s0f0: 10.200.99.2
+  IP address for mgt_br:   10.251.251.1
+  IP address for lxcbr0:   10.0.3.1
+  IP address for virbr1:   192.168.123.1
+  IP address for virbr0:   192.168.122.1
+  IP address for docker0:  172.17.0.1
+  IP address for tunl0:    172.18.155.0
+
+
+ * Canonical Livepatch is available for installation.
+   - Reduce system reboots and improve kernel security. Activate at:
+     https://ubuntu.com/livepatch
+
+424 packages can be updated.
+304 updates are security updates.
+
+New release '20.04.2 LTS' available.
+Run 'do-release-upgrade' to upgrade to it.
+
+
+Last login: Mon May 24 13:36:00 2021 from 10.24.91.207
+brmcdoug@gojira:~$ ssh cisco@10.251.252.117
+ssh: connect to host 10.251.252.117 port 22: No route to host
+brmcdoug@gojira:~$ ^C
+brmcdoug@gojira:~$ ssh cisco@10.251.251.117
+The authenticity of host '10.251.251.117 (10.251.251.117)' can't be established.
+ECDSA key fingerprint is SHA256:mntZOh0CPy3beYXBDZ92BOtnRyvun3iTPX2mXm1wUlU.
+Are you sure you want to continue connecting (yes/no)? yes
+Warning: Permanently added '10.251.251.117' (ECDSA) to the list of known hosts.
+Password: 
+
+
+RP/0/RP0/CPU0:R17#sho run
+Mon Mar 15 20:07:51.407 UTC
+Building configuration...
+!! IOS XR Configuration 7.3.1
+!! Last configuration change at Sun May  2 02:49:23 2021 by cisco
+!
+hostname R17
+username cisco
+ group root-lr
+ group cisco-support
+ secret 10 $6$GXFSDMYr1txD....$09ETAo1VMaFVXEu9HMDuV9y8fpXbZIHhgWe8nqvxotAaOOaTCxsC8QBzp3g1aVHFZUOtPuLFeLOaL.XsIpQHw.
+!
+grpc
+ port 57400
+ no-tls
+ address-family ipv4
+ service-layer
+ !
+!
+telemetry model-driven
+ destination-group jalapeno
+  address-family ipv4 10.251.251.1 port 32400
+   encoding self-describing-gpb
+   protocol grpc no-tls
+  !
+ !
+ sensor-group cisco_models
+  sensor-path Cisco-IOS-XR-pfi-im-cmd-oper:interfaces/interface-xr/interface
+  sensor-path Cisco-IOS-XR-fib-common-oper:mpls-forwarding/nodes/node/label-fib/forwarding-details/forwarding-detail
+ !
+ sensor-group openconfig_interfaces
+  sensor-path openconfig-interfaces:interfaces
+ !
+ subscription base_metrics
+  sensor-group-id cisco_models sample-interval 10000
+  sensor-group-id openconfig_interfaces sample-interval 10000
+  destination-id jalapeno
+ !
+!
+tpa       
+ vrf default
+  address-family ipv4
+   default-route mgmt
+   update-source dataports Loopback0
+  !
+ !
+!
+call-home
+ service active
+ contact smart-licensing
+ profile CiscoTAC-1
+  active
+  destination transport-method http
+ !
+!
+netconf-yang agent
+ ssh
+!
+interface Loopback0
+ ipv4 address 10.0.0.17 255.255.255.255
+ ipv6 address 2001:1:1:f017::1/128
+!
+interface MgmtEth0/RP0/CPU0/0
+ description mgt  
+ ipv4 address 10.251.251.117 255.255.255.0
+!
+interface GigabitEthernet0/0/0/0
+ description to R16 naja
+ mtu 1460
+ ipv4 address 10.1.1.45 255.255.255.254
+ ipv6 address 2001:1:1:1::45/127
+!
+interface GigabitEthernet0/0/0/1
+ description to R18 
+ ipv4 address 10.1.1.46 255.255.255.254
+ ipv6 address 2001:1:1:1::46/127
+!
+interface GigabitEthernet0/0/0/2
+ shutdown
+!
+interface GigabitEthernet0/0/0/3
+ shutdown
+!
+interface GigabitEthernet0/0/0/4
+ shutdown
+!
+interface GigabitEthernet0/0/0/5
+ shutdown
+!
+interface GigabitEthernet0/0/0/6
+ shutdown
+!
+interface GigabitEthernet0/0/0/7
+ description scapy
+ shutdown
+!
+interface GigabitEthernet0/0/0/8
+ shutdown
+!
+interface GigabitEthernet0/0/0/9
+ shutdown
+!
+route-policy SID($SID)
+  set label-index $SID
+end-policy
+!
+route-policy drop
+  drop
+end-policy
+!
+route-policy pass
+  pass    
+end-policy
+!
+router isis 100
+ is-type level-2-only
+ net 49.0901.0000.0000.0017.00
+ distribute link-state level 2
+ nsf ietf
+ address-family ipv4 unicast
+  metric-style wide
+  mpls traffic-eng level-2-only
+  mpls traffic-eng router-id Loopback0
+  maximum-paths 32
+  segment-routing mpls
+ !
+ address-family ipv6 unicast
+  metric-style wide
+  advertise link attributes
+  maximum-paths 32
+  segment-routing srv6
+   locator MAIN
+   !
+  !
+ !
+ interface Loopback0
+  passive
+  address-family ipv4 unicast
+   prefix-sid index 17
+  !
+  address-family ipv6 unicast
+  !
+ !
+ interface GigabitEthernet0/0/0/0
+  circuit-type level-2-only
+  point-to-point
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+ !
+ interface GigabitEthernet0/0/0/1
+  circuit-type level-2-only
+  point-to-point
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+ !
+!
+mpls oam
+!
+segment-routing
+ global-block 100000 163999
+ srv6
+  encapsulation
+   source-address 2001:1:1:f017::1
+  !       
+  locators
+   locator MAIN
+   !
+  !
+ !
+!
+netconf agent tty
+!
+ssh server rate-limit 600
+ssh server session-limit 100
+ssh server v2
+ssh server vrf default
+ssh server netconf vrf default
+end
+
+RP/0/RP0/CPU0:R17#  exit
+Connection to 10.251.251.117 closed.
+brmcdoug@gojira:~$ ssh cisco@10.251.251.118
+Password: 
+
+
+RP/0/RP0/CPU0:R18#sho run
+Mon Mar 15 20:08:13.428 UTC
+Building configuration...
+!! IOS XR Configuration 7.3.1
+!! Last configuration change at Fri May 14 17:58:51 2021 by cisco
+!
+hostname R18
+username cisco
+ group root-lr
+ group cisco-support
+ secret 10 $6$GXFSDMYr1txD....$09ETAo1VMaFVXEu9HMDuV9y8fpXbZIHhgWe8nqvxotAaOOaTCxsC8QBzp3g1aVHFZUOtPuLFeLOaL.XsIpQHw.
+!
+grpc
+ port 57400
+ no-tls
+ address-family ipv4
+ service-layer
+ !
+!
+telemetry model-driven
+ destination-group jalapeno
+  address-family ipv4 10.251.251.1 port 32400
+   encoding self-describing-gpb
+   protocol grpc no-tls
+  !
+ !
+ sensor-group cisco_models
+  sensor-path Cisco-IOS-XR-pfi-im-cmd-oper:interfaces/interface-xr/interface
+  sensor-path Cisco-IOS-XR-fib-common-oper:mpls-forwarding/nodes/node/label-fib/forwarding-details/forwarding-detail
+ !
+ sensor-group openconfig_interfaces
+  sensor-path openconfig-interfaces:interfaces
+ !
+ subscription base_metrics
+  sensor-group-id cisco_models sample-interval 10000
+  sensor-group-id openconfig_interfaces sample-interval 10000
+  destination-id jalapeno
+ !
+!
+tpa       
+ vrf default
+  address-family ipv4
+   default-route mgmt
+   update-source dataports Loopback0
+  !
+ !
+!
+call-home
+ service active
+ contact smart-licensing
+ profile CiscoTAC-1
+  active
+  destination transport-method http
+ !
+!
+netconf-yang agent
+ ssh
+!
+interface Loopback0
+ ipv4 address 10.0.0.18 255.255.255.255
+ ipv6 address 2001:1:1:f018::1/128
+!
+interface MgmtEth0/RP0/CPU0/0
+ description mgt  
+ ipv4 address 10.251.251.118 255.255.255.0
+!
+interface GigabitEthernet0/0/0/0
+ description to R17
+ ipv4 address 10.1.1.47 255.255.255.254
+ ipv6 address 2001:1:1:1::47/127
+!
+interface GigabitEthernet0/0/0/1
+ description to R19
+ ipv4 address 10.1.1.35 255.255.255.254
+ ipv6 address 2001:1:1:1::35/127
+!         
+interface GigabitEthernet0/0/0/2
+ description to R22
+ ipv4 address 10.1.1.48 255.255.255.254
+ ipv6 address 2001:1:1:1::48/127
+!
+interface GigabitEthernet0/0/0/3
+ shutdown
+!
+interface GigabitEthernet0/0/0/4
+ shutdown
+!
+interface GigabitEthernet0/0/0/5
+ shutdown
+!
+interface GigabitEthernet0/0/0/6
+ shutdown
+!
+interface GigabitEthernet0/0/0/7
+ description scapy
+ ipv4 address 10.0.252.118 255.255.255.0
+!
+interface GigabitEthernet0/0/0/8
+ shutdown
+!
+interface GigabitEthernet0/0/0/9
+ shutdown
+!
+route-policy SID($SID)
+  set label-index $SID
+end-policy
+!
+route-policy drop
+  drop
+end-policy
+!
+route-policy naja
+  if destination in (172.16.155.0/24) then
+    pass
+  else
+    drop
+  endif
+end-policy
+!
+route-policy pass
+  pass
+end-policy
+!
+router static
+ address-family ipv4 unicast
+  172.16.155.0/24 GigabitEthernet0/0/0/7 10.0.252.1
+  172.16.155.0/24 GigabitEthernet0/0/0/7
+ !
+!
+router isis 100
+ is-type level-2-only
+ net 49.0901.0000.0000.0018.00
+ distribute link-state level 2
+ nsf ietf
+ address-family ipv4 unicast
+  metric-style wide
+  mpls traffic-eng level-2-only
+  mpls traffic-eng router-id Loopback0
+  maximum-paths 32
+  segment-routing mpls
+ !
+ address-family ipv6 unicast
+  metric-style wide
+  advertise link attributes
+  maximum-paths 32
+  segment-routing srv6
+   locator MAIN
+   !      
+  !
+ !
+ interface Loopback0
+  passive
+  address-family ipv4 unicast
+   prefix-sid index 18
+  !
+  address-family ipv6 unicast
+  !
+ !
+ interface GigabitEthernet0/0/0/0
+  circuit-type level-2-only
+  point-to-point
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+ !
+ interface GigabitEthernet0/0/0/1
+  circuit-type level-2-only
+  point-to-point
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+ !
+ interface GigabitEthernet0/0/0/2
+  circuit-type level-2-only
+  point-to-point
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+ !
+!
+router bgp 100000
+ bgp router-id 10.0.0.18
+ segment-routing srv6
+  locator MAIN
+ !
+ bgp bestpath as-path multipath-relax
+ address-family ipv4 unicast
+  additional-paths receive
+  maximum-paths ebgp 32
+  network 10.0.0.18/32 route-policy SID(18)
+  network 10.0.252.0/24 route-policy SID(252)
+  redistribute static route-policy naja
+  allocate-label all
+ !
+ address-family vpnv4 unicast
+  retain route-target all
+ !
+ address-family ipv6 unicast
+  additional-paths receive
+  maximum-paths ebgp 32
+  network 2001:1:1:f018::1/128
+ !
+ address-family vpnv6 unicast
+ !
+ neighbor 10.0.0.10
+  remote-as 100000
+  description iBGP to r10 
+  update-source Loopback0
+  address-family ipv4 unicast
+   next-hop-self
+  !
+  address-family ipv4 labeled-unicast
+   next-hop-self
+  !
+  address-family vpnv4 unicast
+   next-hop-self
+  !
+  address-family ipv6 unicast
+   next-hop-self
+  !
+  address-family vpnv6 unicast
+   next-hop-self
+  !
+ !
+!
+mpls oam
+!
+segment-routing
+ global-block 100000 163999
+ srv6
+  encapsulation
+   source-address 1801:1:1:f018::1
+  !
+  locators
+   locator MAIN
+   !
+  !
+ !
+!
+netconf agent tty
+!
+ssh server rate-limit 600
+ssh server session-limit 100
+ssh server v2
+ssh server vrf default
+ssh server netconf vrf default
+end
+
+RP/0/RP0/CPU0:R18#  exit
+Connection to 10.251.251.118 closed.
+brmcdoug@gojira:~$ ssh cisco@10.251.251.119
+The authenticity of host '10.251.251.119 (10.251.251.119)' can't be established.
+ECDSA key fingerprint is SHA256:/RsLoPceBNeAYfiLXohV+nAsKiX2Vn1HfMZinykices.
+Are you sure you want to continue connecting (yes/no)? yes
+Warning: Permanently added '10.251.251.119' (ECDSA) to the list of known hosts.
+Password: 
+
+
+RP/0/RP0/CPU0:R19#sho run
+Mon Mar 15 20:08:31.797 UTC
+Building configuration...
+!! IOS XR Configuration 7.3.1
+!! Last configuration change at Sun May  2 03:03:54 2021 by cisco
+!
+hostname R19
+username cisco
+ group root-lr
+ group cisco-support
+ secret 10 $6$GXFSDMYr1txD....$09ETAo1VMaFVXEu9HMDuV9y8fpXbZIHhgWe8nqvxotAaOOaTCxsC8QBzp3g1aVHFZUOtPuLFeLOaL.XsIpQHw.
+!
+grpc
+ port 57400
+ no-tls
+ address-family ipv4
+ service-layer
+ !
+!
+telemetry model-driven
+ destination-group jalapeno
+  address-family ipv4 10.251.251.1 port 32400
+   encoding self-describing-gpb
+   protocol grpc no-tls
+  !
+ !
+ sensor-group cisco_models
+  sensor-path Cisco-IOS-XR-pfi-im-cmd-oper:interfaces/interface-xr/interface
+  sensor-path Cisco-IOS-XR-fib-common-oper:mpls-forwarding/nodes/node/label-fib/forwarding-details/forwarding-detail
+ !
+ sensor-group openconfig_interfaces
+  sensor-path openconfig-interfaces:interfaces
+ !
+ subscription base_metrics
+  sensor-group-id cisco_models sample-interval 10000
+  sensor-group-id openconfig_interfaces sample-interval 10000
+  destination-id jalapeno
+ !
+!
+tpa       
+ vrf default
+  address-family ipv4
+   default-route mgmt
+   update-source dataports Loopback0
+  !
+ !
+!
+call-home
+ service active
+ contact smart-licensing
+ profile CiscoTAC-1
+  active
+  destination transport-method http
+ !
+!
+netconf-yang agent
+ ssh
+!
+interface Loopback0
+ ipv4 address 10.0.0.19 255.255.255.255
+ ipv6 address 2001:1:1:f019::1/128
+!
+interface MgmtEth0/RP0/CPU0/0
+ description mgt  
+ ipv4 address 10.251.251.119 255.255.255.0
+!
+interface GigabitEthernet0/0/0/0
+ description to R18
+ ipv4 address 10.1.1.34 255.255.255.254
+ ipv6 address 2001:1:1:1::34/127
+!
+interface GigabitEthernet0/0/0/1
+ description to R20
+ ipv4 address 10.1.1.31 255.255.255.254
+ ipv6 address 2001:1:1:1::31/127
+!         
+interface GigabitEthernet0/0/0/2
+ description to R24
+ ipv4 address 10.1.1.17 255.255.255.254
+ ipv6 address 2001:1:1:1::17/127
+!
+interface GigabitEthernet0/0/0/3
+ shutdown
+!
+interface GigabitEthernet0/0/0/4
+ shutdown
+!
+interface GigabitEthernet0/0/0/5
+ shutdown
+!
+interface GigabitEthernet0/0/0/6
+ shutdown
+!
+interface GigabitEthernet0/0/0/7
+ description scapy
+ shutdown
+!
+interface GigabitEthernet0/0/0/8
+ shutdown
+!
+interface GigabitEthernet0/0/0/9
+ shutdown
+!
+route-policy SID($SID)
+  set label-index $SID
+end-policy
+!
+route-policy drop
+  drop
+end-policy
+!
+route-policy pass
+  pass
+end-policy
+!
+router isis 100
+ is-type level-2-only
+ net 49.0901.0000.0000.0019.00
+ distribute link-state level 2
+ nsf ietf
+ address-family ipv4 unicast
+  metric-style wide
+  mpls traffic-eng level-2-only
+  mpls traffic-eng router-id Loopback0
+  maximum-paths 32
+  segment-routing mpls
+ !
+ address-family ipv6 unicast
+  metric-style wide
+  advertise link attributes
+  maximum-paths 32
+  segment-routing srv6
+   locator MAIN
+   !
+  !
+ !
+ interface Loopback0
+  passive
+  address-family ipv4 unicast
+   prefix-sid index 19
+  !
+  address-family ipv6 unicast
+  !
+ !
+ interface GigabitEthernet0/0/0/0
+  circuit-type level-2-only
+  point-to-point
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+ !
+ interface GigabitEthernet0/0/0/1
+  circuit-type level-2-only
+  point-to-point
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+ !
+ interface GigabitEthernet0/0/0/2
+  circuit-type level-2-only
+  point-to-point
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+ !
+!
+mpls oam
+!
+segment-routing
+ global-block 100000 163999
+ srv6
+  encapsulation
+   source-address 1901:1:1:f019::1
+  !
+  locators
+   locator MAIN
+   !
+  !
+ !
+!
+netconf agent tty
+!
+ssh server rate-limit 600
+ssh server session-limit 100
+ssh server v2
+ssh server vrf default
+ssh server netconf vrf default
+end
+
+RP/0/RP0/CPU0:R19#  exit
+Connection to 10.251.251.119 closed.
+brmcdoug@gojira:~$ ssh cisco@10.251.251.120
+Password: 
+
+
+RP/0/RP0/CPU0:R20#sho run
+Mon Mar 15 20:08:50.420 UTC
+Building configuration...
+!! IOS XR Configuration 7.3.1
+!! Last configuration change at Sun May  2 02:49:42 2021 by cisco
+!
+hostname R20
+username cisco
+ group root-lr
+ group cisco-support
+ secret 10 $6$GXFSDMYr1txD....$09ETAo1VMaFVXEu9HMDuV9y8fpXbZIHhgWe8nqvxotAaOOaTCxsC8QBzp3g1aVHFZUOtPuLFeLOaL.XsIpQHw.
+!
+grpc
+ port 57400
+ no-tls
+ address-family ipv4
+ service-layer
+ !
+!
+telemetry model-driven
+ destination-group jalapeno
+  address-family ipv4 10.251.251.1 port 32400
+   encoding self-describing-gpb
+   protocol grpc no-tls
+  !
+ !
+ sensor-group cisco_models
+  sensor-path Cisco-IOS-XR-pfi-im-cmd-oper:interfaces/interface-xr/interface
+  sensor-path Cisco-IOS-XR-fib-common-oper:mpls-forwarding/nodes/node/label-fib/forwarding-details/forwarding-detail
+ !
+ sensor-group openconfig_interfaces
+  sensor-path openconfig-interfaces:interfaces
+ !
+ subscription base_metrics
+  sensor-group-id cisco_models sample-interval 10000
+  sensor-group-id openconfig_interfaces sample-interval 10000
+  destination-id jalapeno
+ !
+!
+tpa       
+ vrf default
+  address-family ipv4
+   default-route mgmt
+   update-source dataports Loopback0
+  !
+ !
+!
+call-home
+ service active
+ contact smart-licensing
+ profile CiscoTAC-1
+  active
+  destination transport-method http
+ !
+!
+netconf-yang agent
+ ssh
+!
+interface Loopback0
+ ipv4 address 10.0.0.20 255.255.255.255
+ ipv6 address 2001:1:1:f020::1/128
+!
+interface MgmtEth0/RP0/CPU0/0
+ description mgt  
+ ipv4 address 10.251.251.120 255.255.255.0
+!
+interface GigabitEthernet0/0/0/0
+ description to R19
+ ipv4 address 10.1.1.30 255.255.255.254
+ ipv6 address 2001:1:1:1::30/127
+!
+interface GigabitEthernet0/0/0/1
+ description to R09 Naja
+ mtu 1460
+ ipv4 address 10.1.1.7 255.255.255.254
+ ipv6 address 2001:1:1:1::7/127
+!
+interface GigabitEthernet0/0/0/2
+ shutdown
+!
+interface GigabitEthernet0/0/0/3
+ shutdown
+!
+interface GigabitEthernet0/0/0/4
+ shutdown
+!
+interface GigabitEthernet0/0/0/5
+ shutdown
+!
+interface GigabitEthernet0/0/0/6
+ shutdown
+!
+interface GigabitEthernet0/0/0/7
+ description scapy
+ shutdown
+!
+interface GigabitEthernet0/0/0/8
+ shutdown
+!
+interface GigabitEthernet0/0/0/9
+ shutdown
+!
+route-policy SID($SID)
+  set label-index $SID
+end-policy
+!
+route-policy drop
+  drop
+end-policy
+!
+route-policy pass
+  pass    
+end-policy
+!
+router isis 100
+ is-type level-2-only
+ net 49.0901.0000.0000.0020.00
+ distribute link-state level 2
+ nsf ietf
+ address-family ipv4 unicast
+  metric-style wide
+  mpls traffic-eng level-2-only
+  mpls traffic-eng router-id Loopback0
+  maximum-paths 32
+  segment-routing mpls
+ !
+ address-family ipv6 unicast
+  metric-style wide
+  advertise link attributes
+  maximum-paths 32
+  segment-routing srv6
+   locator MAIN
+   !
+  !
+ !
+ interface Loopback0
+  passive
+  address-family ipv4 unicast
+   prefix-sid index 20
+  !
+  address-family ipv6 unicast
+  !
+ !
+ interface GigabitEthernet0/0/0/0
+  circuit-type level-2-only
+  point-to-point
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+ !
+ interface GigabitEthernet0/0/0/1
+  circuit-type level-2-only
+  point-to-point
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix ti-lfa
+   fast-reroute per-prefix ti-lfa level 2
+   metric 1
+  !
+ !
+!
+mpls oam
+!
+segment-routing
+ global-block 100000 163999
+ srv6
+  encapsulation
+   source-address 2001:1:1:f020::1
+  !       
+  locators
+   locator MAIN
+   !
+  !
+ !
+!
+netconf agent tty
+!
+ssh server rate-limit 600
+ssh server session-limit 100
+ssh server v2
+ssh server vrf default
+ssh server netconf vrf default
+end
+
+RP/0/RP0/CPU0:R20# exit
